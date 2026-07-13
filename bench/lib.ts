@@ -120,57 +120,100 @@ async function driveToCheckout(
     case "stripe-checkout":
     case "lemonsqueezy":
     case "gumroad":
-    case "paddle":
       return true;
+    // Paddle: a hosted buy.paddle.com URL is already the checkout, but a MERCHANT
+    // product page detected via the cdn.paddle.com fingerprint still needs its
+    // Buy/Checkout click to open the overlay iframe before fillCheckout can see
+    // any field. Only short-circuit for the hosted host.
+    case "paddle": {
+      let host = "";
+      try {
+        host = new URL(scenario.url).hostname.toLowerCase();
+      } catch {}
+      if (host === "buy.paddle.com") return true;
+      return openStorefrontCheckout(page, scenario, merchant);
+    }
     // Wizard storefronts: click through add-to-cart → checkout; fillCheckout's
     // advanceWizard handles the rest.
-    default: {
-      const overrides = merchant?.overrides ?? {};
-      const addSelectors = [
-        overrides.addToCart,
-        '[data-hook="add-to-cart-button"]',
-        ".snipcart-add-item",
-        'button:has-text("Add to Cart")',
-        'button:has-text("Add to cart")',
-        'button:has-text("Add to Bag")',
-        'button:has-text("Buy now")',
-      ].filter((s): s is string => Boolean(s));
-      for (const sel of addSelectors) {
-        const present = await page
-          .waitForSelector(sel, { timeout: 1500, state: "visible" })
-          .then(() => true)
-          .catch(() => false);
-        if (!present) continue;
-        await page.click(sel, { timeout: 8000 }).catch(() => {});
-        log(id, `add-to-cart via ${sel}`);
-        await timer(2500);
-        break;
-      }
-      for (const sel of [
-        overrides.checkout,
-        'a:has-text("Check Out")',
-        'a:has-text("Checkout")',
-        'button:has-text("Check Out")',
-        'button:has-text("Checkout")',
-        'a:has-text("Go to Checkout")',
-        '[href*="/checkout"]',
-      ].filter((s): s is string => Boolean(s))) {
-        const present = await page
-          .waitForSelector(sel, { timeout: 1500, state: "visible" })
-          .then(() => true)
-          .catch(() => false);
-        if (!present) continue;
-        await page.click(sel, { timeout: 8000 }).catch(() => {});
-        log(id, `checkout via ${sel}`);
-        await timer(3500);
-        return true;
-      }
-      // Some storefronts (Ecwid, Snipcart) open the checkout as an overlay right
-      // after add-to-cart; treat a visible card/billing surface as success.
-      const signals = await classifyCheckoutSignals(page);
-      return signals.stripeInline;
-    }
+    default:
+      return openStorefrontCheckout(page, scenario, merchant);
   }
+}
+
+// Probe for a VISIBLE direct card-number input (non-iframe checkouts like
+// FastSpring / Paddle), so a reached direct-input payment form counts as
+// checkout-reached even without a Stripe iframe.
+async function hasVisibleCardField(page: any): Promise<boolean> {
+  for (const sel of [
+    'input[autocomplete="cc-number"]',
+    'input[name="cardNumber"]',
+    'input[name*="cardnumber" i]',
+    'input[name*="ccNumber" i]',
+    "#cardNumber",
+  ]) {
+    const ok = await page
+      .waitForSelector(sel, { timeout: 700, state: "visible" })
+      .then(() => true)
+      .catch(() => false);
+    if (ok) return true;
+  }
+  return false;
+}
+
+// Open a generic storefront's checkout: click Add-to-cart, then Checkout, and
+// report whether a payment surface (Stripe iframe OR direct card inputs) is now
+// reachable.
+async function openStorefrontCheckout(
+  page: any,
+  scenario: Scenario,
+  merchant?: MerchantRecipe
+): Promise<boolean> {
+  const id = scenario.id;
+  const overrides = merchant?.overrides ?? {};
+  const addSelectors = [
+    overrides.addToCart,
+    '[data-hook="add-to-cart-button"]',
+    ".snipcart-add-item",
+    'button:has-text("Add to Cart")',
+    'button:has-text("Add to cart")',
+    'button:has-text("Add to Bag")',
+    'button:has-text("Buy now")',
+  ].filter((s): s is string => Boolean(s));
+  for (const sel of addSelectors) {
+    const present = await page
+      .waitForSelector(sel, { timeout: 1500, state: "visible" })
+      .then(() => true)
+      .catch(() => false);
+    if (!present) continue;
+    await page.click(sel, { timeout: 8000 }).catch(() => {});
+    log(id, `add-to-cart via ${sel}`);
+    await timer(2500);
+    break;
+  }
+  for (const sel of [
+    overrides.checkout,
+    'a:has-text("Check Out")',
+    'a:has-text("Checkout")',
+    'button:has-text("Check Out")',
+    'button:has-text("Checkout")',
+    'a:has-text("Go to Checkout")',
+    '[href*="/checkout"]',
+  ].filter((s): s is string => Boolean(s))) {
+    const present = await page
+      .waitForSelector(sel, { timeout: 1500, state: "visible" })
+      .then(() => true)
+      .catch(() => false);
+    if (!present) continue;
+    await page.click(sel, { timeout: 8000 }).catch(() => {});
+    log(id, `checkout via ${sel}`);
+    await timer(3500);
+    return true;
+  }
+  // Some storefronts (Ecwid, Snipcart) open the checkout as an overlay right
+  // after add-to-cart; treat a visible card surface — Stripe iframe OR direct
+  // card inputs (FastSpring/Paddle) — as success.
+  const signals = await classifyCheckoutSignals(page);
+  return signals.stripeInline || (await hasVisibleCardField(page));
 }
 
 export interface RunOptions {
@@ -218,15 +261,11 @@ export async function runScenario(
 
   try {
     // The registry's verdict for this URL (local bundle — same data the hosted
-    // /v1/recipes serves). A recorded dead-end is a result, not an attempt.
+    // /v1/recipes serves) is a HINT for platform/overrides, not a shortcut: a
+    // dead-end scenario is still driven and classified LIVE below, so the
+    // benchmark actually re-verifies the recipe status instead of trusting it
+    // (a down or re-themed site must not keep "passing" on registry memory).
     const known = recipesForUrl(bundle, scenario.url);
-    if (known.merchant?.deadEnd) {
-      log(id, `registry dead-end: ${known.merchant.deadEnd.type}`);
-      return result("detect", {
-        blocker: `dead-end:${known.merchant.deadEnd.type}`,
-        platform: known.merchant.platform,
-      });
-    }
 
     if (!(await gotoWithRetry(page, scenario.url, id))) {
       return result("none", { blocker: "error:navigation failed after 3 attempts" });
@@ -245,6 +284,15 @@ export async function runScenario(
     if (!(await driveToCheckout(page, platform, scenario, known.merchant))) {
       return result("detect", { platform, blocker: "error:could not reach checkout" });
     }
+
+    // Classify the FRESHLY-reached checkout for a dead-end (Turnstile,
+    // PayPal-only, Stripe misconfig) BEFORE filling — billing entry and payment-
+    // method selection perturb the DOM, so a pristine read is both more accurate
+    // and the point at which an agent should bail. A fillable Stripe surface
+    // reads as stripe-inline here (not a dead-end) and proceeds to the fill.
+    const preSignals = await classifyCheckoutSignals(page);
+    const preDeadEnd = gatewayDeadEnd(preSignals.gateway);
+    if (preDeadEnd) return result("cart", { platform, blocker: `dead-end:${preDeadEnd}` });
 
     // Buy mode submits any scenario flagged `allowBuy` (independent of target —
     // e.g. a target:"fill" scenario can still be a real-money buy candidate).

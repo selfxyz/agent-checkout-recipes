@@ -18,11 +18,16 @@ Each scenario is scored by the furthest level it reaches unattended:
 | `fill`   | filled the card form with mock tokens (no submit)             |
 | `buy`    | submitted once and got an order confirmation (buy mode only)  |
 
-A scenario **passes** when it reaches its `target` — or, for a known dead-end,
-when it *correctly classifies* that dead-end (refusing a PayPal-only or
-Turnstile-walled store is autonomy too). The run also prints an **autonomy
-score**: the mean per-scenario progress toward target, so stalling at `cart`
-everywhere still scores above failing to detect platforms.
+A scenario **passes** when it reaches its `target` — or, for a `expectDeadEnd`
+scenario, when it **drives the site and classifies that dead-end live** (refusing
+a PayPal-only or Turnstile-walled store is autonomy too). Registry recipe data is
+only a *hint* for platform/overrides; every scenario, dead-end included, is
+exercised end-to-end, so a down or re-themed site fails instead of passing on
+memory. Dead-ends the harness can't detect live (e.g. a Shop Pay login-wall,
+which needs a page URL the SDK doesn't expose) stay in the registry as recorded
+data rather than as bench scenarios. The run also prints an **autonomy score**:
+the mean per-scenario progress toward target (a pass counts as full progress), so
+stalling at `cart` everywhere still scores above failing to detect platforms.
 
 ## Running
 

@@ -85,13 +85,17 @@ async function main() {
   const results: ScenarioResult[] = [];
   for (const scenario of scenarios) {
     // Per-scenario catalog: use the card registered for the merchant when there
-    // is one, else the shared catalog — mirrors how an agent would fill.
-    let cat = catalogFromTokens(catalog);
+    // is one; otherwise prefer an UNSCOPED (general-purpose) card. A card scoped
+    // to another merchant would be rejected by the proxy as merchant_blocked, so
+    // falling back to the raw catalog[0] would make the result depend on catalog
+    // ordering. Unscoped cards have no `websites`.
+    const unscoped = catalog.cards.filter((c) => !c.websites || c.websites.length === 0);
+    let cat = catalogFromTokens(unscoped.length ? { ...catalog, cards: unscoped } : catalog);
     try {
       const scoped = await tokensForUrl(scenario.url, { catalog });
       if (scoped.cards.length) cat = catalogFromTokens({ ...catalog, cards: scoped.cards });
     } catch {
-      /* fall back to the shared catalog */
+      /* keep the unscoped-preferred catalog */
     }
 
     // Fresh browser per scenario so a wedged page never taints the next. Retry

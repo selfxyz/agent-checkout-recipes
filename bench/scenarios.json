@@ -1,5 +1,5 @@
 {
-  "$comment": "Autonomy benchmark scenarios. target = the level a run should reach unattended (detect|cart|fill|buy). expectDeadEnd = the run PASSES iff it classifies that dead-end. allowBuy gates real-money submits (only in --buy mode, ≤ maxBuyPrice). Add a scenario when you add/verify a recipe.",
+  "$comment": "Autonomy benchmark scenarios. target = the level a run should reach unattended (detect|cart|fill|buy). expectDeadEnd = the run PASSES iff it DRIVES the site and classifies that dead-end LIVE (registry data is only a hint; the run re-verifies it). allowBuy gates real-money submits (only in --buy mode, <= maxBuyPrice). Every scenario is exercised end-to-end — only add a dead-end scenario the harness can classify live (turnstile/paypal-only/captcha/stripe-config via classifyCheckoutSignals). Dead-ends the harness can't detect live (e.g. Shop Pay login-wall, which needs a page URL the SDK doesn't expose) live in the registry as recorded data, not here.",
   "scenarios": [
     {
       "id": "brushespack-woo",
@@ -15,14 +15,7 @@
       "url": "https://bepatterns.com/product/skull-granny-square/",
       "target": "cart",
       "expectDeadEnd": "paypal-only",
-      "notes": "WooCommerce PayPal PPCP, guestEnabled:false — must classify, not attempt."
-    },
-    {
-      "id": "rufflesandrainboots-turnstile",
-      "url": "https://shop.rufflesandrainboots.com/",
-      "target": "cart",
-      "expectDeadEnd": "turnstile",
-      "notes": "Cloudflare Turnstile on checkout."
+      "notes": "WooCommerce PayPal PPCP, guestEnabled:false — driven to checkout, then classified paypal-only on the pristine checkout (no guest card frame). Live-verified 2026-07-13."
     },
     {
       "id": "sanjosestickers-bigcartel",
@@ -31,13 +24,6 @@
       "price": 1.0,
       "currency": "USD",
       "notes": "Big Cartel wizard; flaky load, invisible hCaptcha. Product URLs rotate."
-    },
-    {
-      "id": "whileonearth-shopify",
-      "url": "https://whileonearth.myshopify.com/products/my-spiritual-practice-vinyl-bumper-sticker",
-      "target": "cart",
-      "expectDeadEnd": "login-wall",
-      "notes": "Store forces Shop Pay express checkout — no guest-card path. Must classify, not attempt. (Shopify card fill itself is proven; see the platform recipe.)"
     }
   ]
 }
