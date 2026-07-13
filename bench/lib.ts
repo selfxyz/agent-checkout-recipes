@@ -161,26 +161,6 @@ function safePath(url: string): string {
   }
 }
 
-// Probe for a VISIBLE direct card-number input (non-iframe checkouts like
-// FastSpring / Paddle), so a reached direct-input payment form counts as
-// checkout-reached even without a Stripe iframe.
-async function hasVisibleCardField(page: any): Promise<boolean> {
-  for (const sel of [
-    'input[autocomplete="cc-number"]',
-    'input[name="cardNumber"]',
-    'input[name*="cardnumber" i]',
-    'input[name*="ccNumber" i]',
-    "#cardNumber",
-  ]) {
-    const ok = await page
-      .waitForSelector(sel, { timeout: 700, state: "visible" })
-      .then(() => true)
-      .catch(() => false);
-    if (ok) return true;
-  }
-  return false;
-}
-
 const visible = (page: any, sel: string, t: number): Promise<boolean> =>
   page
     .waitForSelector(sel, { timeout: t, state: "visible" })
@@ -188,29 +168,43 @@ const visible = (page: any, sel: string, t: number): Promise<boolean> =>
     .catch(() => false);
 
 const EMPTY_CART_SEL = "text=/your (cart|bag|basket) is empty|cart is empty|no items in your/i";
-const ORDER_CONTEXT_SEL =
+// A POSITIVE checkout-context signal: an order summary / line item / total, or a
+// checkout-wizard advance affordance (a Continue/Next step button). Deliberately
+// NOT a bare email input — a login or newsletter page reached from a no-op'd
+// add-to-cart also has one. Split into a CSS-selector list and a `text=` probe:
+// a `text=` engine selector mixed into a comma-separated CSS list is INVALID and
+// throws, silently failing the whole probe (a bug from the campaign notes).
+const ORDER_CONTEXT_CSS =
   "[class*='line-item' i], [class*='order-summary' i], [class*='order-total' i]," +
-  " input[type='email'], input[name*='email' i]," +
-  ' button:has-text("Continue"), button:has-text("Next"),' +
-  " text=/order summary|subtotal|order total|place order|pay now|continue to (payment|shipping)/i";
+  ' button:has-text("Continue"), button:has-text("Next")';
+const ORDER_CONTEXT_TEXT =
+  "text=/order summary|subtotal|order total|place order|pay now|continue to (payment|shipping)/i";
+
+const STRIPE_FRAME_SEL =
+  'iframe[title="Secure payment input frame"], iframe[title="Secure card number input frame"],' +
+  ' iframe[title="Secure card payment input frame"]';
+const CARD_INPUT_SEL =
+  'input[autocomplete="cc-number"], input[name="cardNumber"], input[name*="cardnumber" i], #cardNumber';
 
 // Whether a successful add-to-cart + Checkout click actually landed on a REAL
 // checkout with an item — the guard against a silently-no-op'd add-to-cart that
-// leaves an EMPTY cart still scoring as "cart reached". Polls (a wizard checkout
-// like BigCartel loads its first step slowly): an explicit empty-cart message is
-// the one hard NO; a payment surface / order context / wizard form is a clear
-// YES; and if neither appears in the budget but the page is NOT an empty cart, we
-// clicked Checkout successfully, so treat it as reached and let the fill step's
-// own waits drive it.
+// leaves an EMPTY cart still scoring as "cart reached". An explicit empty-cart
+// message is the one hard NO. A payment surface / Paddle overlay / order context
+// is a fast YES. Polls, then — if it never saw an empty cart but also no positive
+// signal (a slow/atypical multi-step wizard like BigCartel, whose first step can
+// render none of these promptly yet is a real checkout the fill step then drives)
+// — treats the successful Checkout click on a non-empty page as reached. NOT a
+// bare email input, which a login/newsletter page also has.
 async function checkoutReached(page: any): Promise<boolean> {
-  const deadline = Date.now() + 8000;
+  const deadline = Date.now() + 8_000;
   while (Date.now() < deadline) {
-    if (await visible(page, EMPTY_CART_SEL, 400)) return false;
-    const signals = await classifyCheckoutSignals(page);
-    if (signals.stripeInline || (await hasVisibleCardField(page))) return true;
-    if (await visible(page, 'iframe[src*="buy.paddle.com"]', 400)) return true;
-    if (await visible(page, ORDER_CONTEXT_SEL, 500)) return true;
-    await timer(600);
+    if (await visible(page, EMPTY_CART_SEL, 300)) return false;
+    if (await visible(page, STRIPE_FRAME_SEL, 300)) return true;
+    if (await visible(page, CARD_INPUT_SEL, 300)) return true;
+    if (await visible(page, 'iframe[src*="buy.paddle.com"]', 300)) return true;
+    if (await visible(page, ORDER_CONTEXT_CSS, 300)) return true;
+    if (await visible(page, ORDER_CONTEXT_TEXT, 300)) return true;
+    await timer(500);
   }
   return !(await visible(page, EMPTY_CART_SEL, 500));
 }
