@@ -138,7 +138,7 @@ async function driveToCheckout(
         platform === "lemonsqueezy" ||
         platform === "stripe-payment-link"
       ) {
-        await seedCustomPrice(page, scenario);
+        await seedCustomPrice(page, scenario, platform);
       }
       if (await paymentSurfacePresent(page)) return true;
       return openStorefrontCheckout(page, scenario, merchant);
@@ -227,18 +227,30 @@ async function checkoutReached(page: any): Promise<boolean> {
 // Squeezy) before the buy CTA, so the flow goes to the PAID card path instead of
 // a free/validation state. Only the scenario's declared price is entered; a
 // missing field is a harmless no-op.
-async function seedCustomPrice(page: any, scenario: Scenario): Promise<void> {
+// Wallet-label exclusion for a loose has-text buy CTA — a bare `has-text("Buy")`
+// substring-matches express-wallet buttons ("Buy … with PayPal/Shop Pay/Apple
+// Pay/…"), and clicking one diverts the run into a wallet flow off the card path.
+const WALLET_NOT = ["PayPal", "Shop Pay", "Apple Pay", "Google Pay", "Amazon Pay", "with"]
+  .map((w) => `:not(:has-text("${w}"))`)
+  .join("");
+
+async function seedCustomPrice(page: any, scenario: Scenario, platform: Platform): Promise<void> {
   if (scenario.price === undefined) return;
-  for (const sel of [
+  const selectors = [
+    // Explicit custom-amount/price fields only — a bare decimal/number input on a
+    // Gumroad/Lemon Squeezy product page can be a quantity/seat-count field, so
+    // seeding it would change the total.
     'input[name="custom_price"]',
-    // Stripe Payment Link / donation custom-amount box (card mounts only after).
-    "#customUnitAmount",
-    'input[name="customUnitAmount"]',
-    'input[inputmode="decimal"]',
     'input[aria-label*="price" i]',
     'input[placeholder*="price" i]',
-    'input[name*="price" i]',
-  ]) {
+    // The generic Stripe amount box (#customUnitAmount / a bare decimal input) is
+    // safe ONLY on a Stripe Payment Link, where the only such field is the
+    // donation/custom amount.
+    ...(platform === "stripe-payment-link"
+      ? ["#customUnitAmount", 'input[name="customUnitAmount"]', 'input[inputmode="decimal"]']
+      : []),
+  ];
+  for (const sel of selectors) {
     if (await visible(page, sel, 700)) {
       await page.fill(sel, scenario.price.toFixed(2)).catch(() => {});
       await page.press(sel, "Tab").catch(() => {});
@@ -265,7 +277,10 @@ async function openStorefrontCheckout(
     'button:has-text("Add to Cart")',
     'button:has-text("Add to cart")',
     'button:has-text("Add to Bag")',
-    'button:has-text("Buy now")',
+    // "Buy now" substring-matches express-wallet buttons ("Buy now with PayPal /
+    // Shop Pay"), so exclude wallet labels — clicking one diverts the run into a
+    // wallet flow away from the card path.
+    `button:has-text("Buy now")${WALLET_NOT}`,
     'button:has-text("I want this")',
     'a:has-text("I want this")',
     // A plain "Buy" opens the overlay on some Paddle/overlay product pages that
