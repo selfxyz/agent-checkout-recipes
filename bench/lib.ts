@@ -129,7 +129,15 @@ async function driveToCheckout(
     case "lemonsqueezy":
     case "paddle":
     case "gumroad": {
-      if (platform === "gumroad" || platform === "lemonsqueezy") {
+      // PWYW / custom-amount platforms: the card fields mount only after the
+      // amount is entered (Gumroad, Lemon Squeezy, and Stripe Payment Link
+      // donation boxes), so seed it before probing. A no-op when no amount field
+      // is present (fixed-price checkouts).
+      if (
+        platform === "gumroad" ||
+        platform === "lemonsqueezy" ||
+        platform === "stripe-payment-link"
+      ) {
         await seedCustomPrice(page, scenario);
       }
       if (await paymentSurfacePresent(page)) return true;
@@ -223,6 +231,10 @@ async function seedCustomPrice(page: any, scenario: Scenario): Promise<void> {
   if (scenario.price === undefined) return;
   for (const sel of [
     'input[name="custom_price"]',
+    // Stripe Payment Link / donation custom-amount box (card mounts only after).
+    "#customUnitAmount",
+    'input[name="customUnitAmount"]',
+    'input[inputmode="decimal"]',
     'input[aria-label*="price" i]',
     'input[placeholder*="price" i]',
     'input[name*="price" i]',
