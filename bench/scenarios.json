@@ -1,0 +1,43 @@
+{
+  "$comment": "Autonomy benchmark scenarios. target = the level a run should reach unattended (detect|cart|fill|buy). expectDeadEnd = the run PASSES iff it classifies that dead-end. allowBuy gates real-money submits (only in --buy mode, ≤ maxBuyPrice). Add a scenario when you add/verify a recipe.",
+  "scenarios": [
+    {
+      "id": "brushespack-woo",
+      "url": "https://brushespack.com/product/pencil-and-markers-brush-pack-procreate-2/",
+      "target": "fill",
+      "price": 1.88,
+      "currency": "USD",
+      "allowBuy": true,
+      "notes": "Verified WooCommerce+Stripe store (order #681199). Set country US first. Product URLs rotate — refresh via the Store API when add-to-cart fails."
+    },
+    {
+      "id": "bepatterns-paypal-only",
+      "url": "https://bepatterns.com/product/skull-granny-square/",
+      "target": "cart",
+      "expectDeadEnd": "paypal-only",
+      "notes": "WooCommerce PayPal PPCP, guestEnabled:false — must classify, not attempt."
+    },
+    {
+      "id": "rufflesandrainboots-turnstile",
+      "url": "https://shop.rufflesandrainboots.com/",
+      "target": "cart",
+      "expectDeadEnd": "turnstile",
+      "notes": "Cloudflare Turnstile on checkout."
+    },
+    {
+      "id": "sanjosestickers-bigcartel",
+      "url": "https://sanjosestickers.bigcartel.com/product/retro-1980s-san-jose-sticker-1",
+      "target": "fill",
+      "price": 1.0,
+      "currency": "USD",
+      "notes": "Big Cartel wizard; flaky load, invisible hCaptcha. Product URLs rotate."
+    },
+    {
+      "id": "whileonearth-shopify",
+      "url": "https://whileonearth.myshopify.com/products/my-spiritual-practice-vinyl-bumper-sticker",
+      "target": "cart",
+      "expectDeadEnd": "login-wall",
+      "notes": "Store forces Shop Pay express checkout — no guest-card path. Must classify, not attempt. (Shopify card fill itself is proven; see the platform recipe.)"
+    }
+  ]
+}

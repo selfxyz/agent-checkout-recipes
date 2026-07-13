@@ -4,7 +4,10 @@
   "kind": "merchant",
   "hosts": ["whileonearth.myshopify.com"],
   "platform": "shopify",
-  "status": "unverified",
-  "notes": "Queue candidate from the 2026-06 campaign: $2 physical notecard, hosted Shopify checkout (own card iframes, not Stripe Elements).",
-  "exampleProductUrl": "https://whileonearth.myshopify.com/products/christmas-gifts-notecard"
+  "status": "dead-end",
+  "deadEnd": {
+    "type": "login-wall",
+    "details": "Observed 2026-07-13 via the autonomy benchmark. The store forces Shop Pay accelerated checkout: the /cart/<variant>:1 permalink 302s straight to shop.app/checkout (leaving the session cart empty), and the Add-to-cart button path is diverted too. Shop Pay needs a Shop account + SMS OTP, so there is no unattended guest-card path. The Shopify PLATFORM recipe stays partial — other stores expose a normal guest checkout."
+  },
+  "notes": "Product handles rotate — refresh via /products.json if revisiting."
 }

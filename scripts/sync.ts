@@ -21,10 +21,10 @@ const payload = {
     platform: r.kind === "merchant" ? r.platform : undefined,
     hosts: r.kind === "merchant" ? r.hosts : undefined,
     status: r.status,
-    // Drop the editor-only $schema pointer: "$"-prefixed field names are
-    // reserved in Convex values, so a parsed body containing it can't be
-    // returned from a query.
-    bodyJson: JSON.stringify({ ...r, $schema: undefined }),
+    // Drop any "$"-prefixed key (the editor-only $schema pointer, nested
+    // $comment notes): "$"-prefixed field names are reserved in Convex values,
+    // so a parsed body containing one can't be returned from a query.
+    bodyJson: JSON.stringify(r, (k, v) => (k.startsWith("$") ? undefined : v)),
   })),
 };
 
