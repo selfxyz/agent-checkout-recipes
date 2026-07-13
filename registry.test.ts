@@ -78,6 +78,24 @@ describe("validateRecipe", () => {
     ).toContain('status "dead-end"');
   });
 
+  test("rejects a platform recipe with no detect signals", () => {
+    expect(validateRecipe({ ...minimalPlatform, detect: {} }).errors.join(" ")).toContain(
+      "at least one"
+    );
+  });
+
+  test("rejects a merchant whose id is not one of its hosts", () => {
+    expect(
+      validateRecipe({
+        id: "foo.com",
+        kind: "merchant",
+        hosts: ["bar.com"],
+        platform: "custom",
+        status: "unverified",
+      }).errors.join(" ")
+    ).toContain("must be one of its hosts");
+  });
+
   test("rejects invalid detect regexes and wildcard merchant hosts", () => {
     expect(
       validateRecipe({

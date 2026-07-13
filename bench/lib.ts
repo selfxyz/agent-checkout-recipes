@@ -119,16 +119,20 @@ async function driveToCheckout(
     // Paddle, Gumroad): the entry URL may already BE the hosted checkout, or a
     // merchant `/buy` link may have redirected to it, or it may be a product page
     // that needs a Buy/Checkout click. The SDK exposes no page.url() to tell which
-    // (a redirect wouldn't be visible in scenario.url anyway), so PROBE the DOM:
-    // if a checkout surface is already present we're there; otherwise drive the
-    // storefront CTA. (Gumroad PWYW: seed the price first so its CTA goes paid.)
+    // (a redirect wouldn't be visible in scenario.url anyway), so PROBE the DOM
+    // for an actual PAYMENT SURFACE — NOT generic order text, which a product page
+    // with an express-pay CTA also has. If present we're on the checkout;
+    // otherwise drive the storefront CTA. (PWYW platforms: seed the price first so
+    // the paid card path mounts.)
     case "stripe-payment-link":
     case "stripe-checkout":
     case "lemonsqueezy":
     case "paddle":
     case "gumroad": {
-      if (platform === "gumroad") await seedCustomPrice(page, scenario);
-      if (await checkoutReached(page)) return true;
+      if (platform === "gumroad" || platform === "lemonsqueezy") {
+        await seedCustomPrice(page, scenario);
+      }
+      if (await paymentSurfacePresent(page)) return true;
       return openStorefrontCheckout(page, scenario, merchant);
     }
     // Wizard storefronts: click through add-to-cart → checkout; fillCheckout's
@@ -171,6 +175,18 @@ const CARD_INPUT_SEL =
 // Overlay checkout iframes that page-level selectors can't pierce, so their mere
 // presence is the positive "checkout reached" signal (fillCheckout handles them).
 const OVERLAY_FRAME_SEL = 'iframe[src*="buy.paddle.com"], iframe[src*="lemonsqueezy.com"]';
+
+// Whether an actual PAYMENT SURFACE is present — a Stripe card frame, direct card
+// inputs, or an overlay checkout iframe. Deliberately excludes generic order/pay
+// TEXT (a product page with an express-pay CTA has "Pay now" without being a
+// checkout), so it's the safe "are we already ON the hosted checkout?" probe.
+async function paymentSurfacePresent(page: any): Promise<boolean> {
+  return (
+    (await visible(page, STRIPE_FRAME_SEL, 800)) ||
+    (await visible(page, CARD_INPUT_SEL, 800)) ||
+    (await visible(page, OVERLAY_FRAME_SEL, 800))
+  );
+}
 
 // Whether a successful add-to-cart + Checkout click actually landed on a REAL
 // checkout with an item. Requires a POSITIVE signal — a payment surface (Stripe
@@ -444,6 +460,10 @@ export async function runScenario(
       place: wantBuy,
       amount: scenario.price,
       currency: scenario.currency,
+      // Replay the merchant recipe's selector overrides (terms/placeOrder/
+      // paymentMethod) during the fill, not just for navigation — otherwise a
+      // verified recipe that corrected a selector runs the generic path.
+      overrides: known.merchant?.overrides,
     });
 
     if (!filled.filled) {

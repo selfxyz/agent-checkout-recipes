@@ -117,6 +117,12 @@ export function validateRecipe(raw: unknown): { recipe?: Recipe; errors: Errors 
           errs.push(`detect.urlPatterns: invalid regex "${p}"`);
         }
       }
+      // At least one non-empty detect signal — a platform recipe with empty
+      // detect can never be inferred from a URL or the DOM, so it'd be dead
+      // coverage no merchant/agent could discover.
+      const d = raw.detect as { hosts?: unknown[]; urlPatterns?: unknown[]; selectors?: unknown[] };
+      if (!(d.hosts?.length || d.urlPatterns?.length || d.selectors?.length))
+        errs.push("detect: needs at least one of hosts / urlPatterns / selectors");
     }
     if (!CARD_SURFACES.includes(raw.cardSurface as never))
       errs.push(`cardSurface: must be one of ${CARD_SURFACES.join(", ")}`);
@@ -130,12 +136,25 @@ export function validateRecipe(raw: unknown): { recipe?: Recipe; errors: Errors 
   }
 
   if (raw.kind === "merchant") {
-    if (
-      !Array.isArray(raw.hosts) ||
-      raw.hosts.length === 0 ||
-      raw.hosts.some((h) => typeof h !== "string" || !HOST_RE.test(h) || h.startsWith("*."))
-    ) {
+    const hostsOk =
+      Array.isArray(raw.hosts) &&
+      raw.hosts.length > 0 &&
+      raw.hosts.every((h) => typeof h === "string" && HOST_RE.test(h) && !h.startsWith("*."));
+    if (!hostsOk) {
       errs.push("hosts: required array of concrete hosts (no wildcards)");
+    } else if (typeof raw.id === "string") {
+      // The id IS the primary host (filename is <id>.json), so it must appear in
+      // `hosts` — else the recipe is listed as coverage for `id` but serves for a
+      // different host, and `id` itself gets no match.
+      const norm = (h: string) =>
+        h
+          .toLowerCase()
+          .replace(/\.$/, "")
+          .replace(/^www\./, "");
+      if (!(raw.hosts as string[]).map(norm).includes(norm(raw.id)))
+        errs.push(
+          `id "${raw.id}" must be one of its hosts (${(raw.hosts as string[]).join(", ")})`
+        );
     }
     if (typeof raw.platform !== "string" || raw.platform.length === 0)
       errs.push("platform: required non-empty string (a platform recipe id or 'custom')");
