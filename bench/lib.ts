@@ -191,17 +191,23 @@ export async function runScenario(
 ): Promise<ScenarioResult> {
   const started = Date.now();
   const id = scenario.id;
+  // In a real-money buy run, an allowBuy scenario only passes if it actually
+  // completed the purchase — a fill/challenge/decline/ambiguous outcome is a
+  // failed buy, not a pass. So the effective target rises to "buy". In dry mode
+  // (or for non-allowBuy scenarios) the declared target stands.
+  const effectiveTarget: Scenario["target"] =
+    opts.buy && scenario.allowBuy === true ? "buy" : scenario.target;
   const result = (level: Level, extra: Partial<ScenarioResult> = {}): ScenarioResult => {
     const deadEnd = extra.blocker?.startsWith("dead-end:")
       ? extra.blocker.slice("dead-end:".length)
       : undefined;
     const pass = scenario.expectDeadEnd
       ? deadEnd === scenario.expectDeadEnd
-      : levelRank(level) >= levelRank(scenario.target);
+      : levelRank(level) >= levelRank(effectiveTarget);
     return {
       id,
       url: scenario.url,
-      target: scenario.target,
+      target: effectiveTarget,
       level,
       pass,
       durationMs: Date.now() - started,
@@ -322,7 +328,11 @@ export function summarize(results: ScenarioResult[]): {
       const key = r.blocker.split(":").slice(0, 2).join(":");
       blockers[key] = (blockers[key] ?? 0) + 1;
     }
-    depth += Math.min(1, levelRank(r.level) / levelRank(r.target));
+    // A pass is full progress — including a correct dead-end refusal, which
+    // reaches only "detect" but IS the right outcome (the benchmark contract:
+    // dead-end classification is autonomy too). Only a genuine shortfall scores
+    // by how far it got.
+    depth += r.pass ? 1 : Math.min(1, levelRank(r.level) / levelRank(r.target));
   }
   const passed = results.filter((r) => r.pass).length;
   return {

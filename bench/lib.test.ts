@@ -38,6 +38,14 @@ describe("summarize", () => {
     expect(s.autonomyScore).toBe(1);
   });
 
+  test("a passing dead-end refusal scores full progress despite a low level", () => {
+    // A correct PayPal-only/Turnstile refusal only reaches "detect" but IS the
+    // right outcome — it must not be scored as partial against its target.
+    const s = summarize([r({ level: "detect", target: "cart", pass: true })]);
+    expect(s.passed).toBe(1);
+    expect(s.autonomyScore).toBe(1);
+  });
+
   test("groups blocker keys by the first two segments", () => {
     const s = summarize([
       r({ pass: false, level: "fill", blocker: "challenge:three_ds,captcha" }),
