@@ -187,26 +187,27 @@ const CARD_INPUT_SEL =
   'input[autocomplete="cc-number"], input[name="cardNumber"], input[name*="cardnumber" i], #cardNumber';
 
 // Whether a successful add-to-cart + Checkout click actually landed on a REAL
-// checkout with an item — the guard against a silently-no-op'd add-to-cart that
-// leaves an EMPTY cart still scoring as "cart reached". An explicit empty-cart
-// message is the one hard NO. A payment surface / Paddle overlay / order context
-// is a fast YES. Polls, then — if it never saw an empty cart but also no positive
-// signal (a slow/atypical multi-step wizard like BigCartel, whose first step can
-// render none of these promptly yet is a real checkout the fill step then drives)
-// — treats the successful Checkout click on a non-empty page as reached. NOT a
-// bare email input, which a login/newsletter page also has.
+// checkout with an item. Requires a POSITIVE signal — a payment surface (Stripe
+// frame / direct card input / Paddle overlay) or an order context / wizard step
+// (order summary / line item / Continue-Next affordance) — so a no-op'd
+// add-to-cart, or a Checkout click that lands on a login / product / newsletter
+// page, is NOT scored as a reached checkout. Polls with short per-probe timeouts
+// so a slow multi-step wizard's first step still has time to render one of these;
+// an explicit empty-cart message short-circuits to not-reached. No positive
+// signal within the budget = not reached. (NOT a bare email input, which a
+// login/newsletter page also has.)
 async function checkoutReached(page: any): Promise<boolean> {
-  const deadline = Date.now() + 8_000;
+  const deadline = Date.now() + 14_000;
   while (Date.now() < deadline) {
-    if (await visible(page, EMPTY_CART_SEL, 300)) return false;
     if (await visible(page, STRIPE_FRAME_SEL, 300)) return true;
     if (await visible(page, CARD_INPUT_SEL, 300)) return true;
     if (await visible(page, 'iframe[src*="buy.paddle.com"]', 300)) return true;
     if (await visible(page, ORDER_CONTEXT_CSS, 300)) return true;
     if (await visible(page, ORDER_CONTEXT_TEXT, 300)) return true;
+    if (await visible(page, EMPTY_CART_SEL, 300)) return false;
     await timer(500);
   }
-  return !(await visible(page, EMPTY_CART_SEL, 500));
+  return false;
 }
 
 // Open a generic storefront's checkout: click Add-to-cart, then Checkout, and

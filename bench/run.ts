@@ -19,18 +19,57 @@ import { join } from "node:path";
 import { listTokens, tokensForUrl } from "@selfxyz/agent-pay-playwright";
 import { catalogFromTokens, chromium } from "@selfxyz/agent-pay-playwright/playbooks.ts";
 import { buildBundle, loadRecipes } from "../src/registry";
+import { DEAD_END_TYPES } from "../src/types";
 import { type RunOptions, type Scenario, type ScenarioResult, runScenario, summarize } from "./lib";
+
+// Valid `target` levels (the reachable subset — "none"/"reach" aren't targets).
+const TARGETS = ["detect", "cart", "fill", "buy"] as const;
+
+// Validate contributor-edited scenarios BEFORE running: a bad `target` (typo or
+// omission) would make levelRank(target) === -1, so any reached level would
+// satisfy the pass check and a broken scenario would report full progress.
+function validateScenarios(scenarios: Scenario[]): void {
+  const problems: string[] = [];
+  const seen = new Set<string>();
+  for (const s of scenarios) {
+    const at = s?.id ? `scenario "${s.id}"` : "a scenario";
+    if (!s?.id || typeof s.id !== "string") problems.push(`${at}: missing string id`);
+    else if (seen.has(s.id)) problems.push(`duplicate scenario id "${s.id}"`);
+    else seen.add(s.id);
+    if (typeof s?.url !== "string" || !s.url) problems.push(`${at}: missing url`);
+    if (!(TARGETS as readonly string[]).includes(s?.target))
+      problems.push(
+        `${at}: target must be one of ${TARGETS.join(", ")} (got ${JSON.stringify(s?.target)})`
+      );
+    if (s?.expectDeadEnd !== undefined && !DEAD_END_TYPES.includes(s.expectDeadEnd))
+      problems.push(`${at}: expectDeadEnd must be one of ${DEAD_END_TYPES.join(", ")}`);
+    if (s?.allowBuy === true && typeof s?.price !== "number")
+      problems.push(`${at}: allowBuy requires a numeric price`);
+  }
+  if (problems.length) throw new Error(`invalid bench/scenarios.json:\n  ${problems.join("\n  ")}`);
+}
 
 function parseArgs(argv: string[]): { buy: boolean; only?: string[]; maxPrice: number } {
   let buy = false;
   let maxPrice = 3;
   let only: string[] | undefined;
-  for (let i = 0; i < argv.length; i++) {
-    const a = argv[i];
-    if (a === "--buy") buy = true;
-    else if (a === "--only") only = (argv[++i] ?? "").split(",").filter(Boolean);
-    else if (a === "--max-price") {
-      const raw = argv[++i] ?? "";
+  // Accept both `--flag value` and `--flag=value`. Fail CLOSED on any unknown
+  // flag: silently ignoring a misspelled/`--max-price=1`-style cap would let a
+  // buy run fall back to the default $3 ceiling unnoticed.
+  const takeValue = (a: string, i: { v: number }): string => {
+    const eq = a.indexOf("=");
+    if (eq !== -1) return a.slice(eq + 1);
+    return argv[++i.v] ?? "";
+  };
+  const idx = { v: 0 };
+  for (idx.v = 0; idx.v < argv.length; idx.v++) {
+    const a = argv[idx.v];
+    if (a === undefined) continue;
+    const name = a.startsWith("--") ? a.split("=")[0] : a;
+    if (name === "--buy") buy = true;
+    else if (name === "--only") only = takeValue(a, idx).split(",").filter(Boolean);
+    else if (name === "--max-price") {
+      const raw = takeValue(a, idx);
       maxPrice = Number(raw);
       // Fail closed on a mistyped cap (e.g. "$3", ""): a NaN cap makes the
       // `price > maxPrice` guard always false, which would let every priced buy
@@ -38,6 +77,8 @@ function parseArgs(argv: string[]): { buy: boolean; only?: string[]; maxPrice: n
       if (!Number.isFinite(maxPrice) || maxPrice <= 0) {
         throw new Error(`--max-price must be a positive number (got "${raw}")`);
       }
+    } else {
+      throw new Error(`unknown argument "${a}" (supported: --buy, --only <ids>, --max-price <n>)`);
     }
   }
   return { buy, only, maxPrice };
@@ -81,6 +122,7 @@ async function main() {
   const scenariosFile = JSON.parse(readFileSync(join(ROOT, "bench/scenarios.json"), "utf8")) as {
     scenarios: Scenario[];
   };
+  validateScenarios(scenariosFile.scenarios);
   let scenarios = scenariosFile.scenarios;
   if (args.only) scenarios = scenarios.filter((s) => args.only?.includes(s.id));
   if (scenarios.length === 0) throw new Error("no scenarios selected");
@@ -159,7 +201,12 @@ async function main() {
   process.exit(summary.passed === summary.total ? 0 : 1);
 }
 
-main().catch((e) => {
-  console.error(e instanceof Error ? e.stack : e);
-  process.exit(2);
-});
+// Run only when invoked directly (not when imported by a test).
+if (import.meta.main) {
+  main().catch((e) => {
+    console.error(e instanceof Error ? e.stack : e);
+    process.exit(2);
+  });
+}
+
+export { parseArgs, validateScenarios };
