@@ -181,9 +181,43 @@ async function hasVisibleCardField(page: any): Promise<boolean> {
   return false;
 }
 
+const visible = (page: any, sel: string, t: number): Promise<boolean> =>
+  page
+    .waitForSelector(sel, { timeout: t, state: "visible" })
+    .then(() => true)
+    .catch(() => false);
+
+const EMPTY_CART_SEL = "text=/your (cart|bag|basket) is empty|cart is empty|no items in your/i";
+const ORDER_CONTEXT_SEL =
+  "[class*='line-item' i], [class*='order-summary' i], [class*='order-total' i]," +
+  " input[type='email'], input[name*='email' i]," +
+  ' button:has-text("Continue"), button:has-text("Next"),' +
+  " text=/order summary|subtotal|order total|place order|pay now|continue to (payment|shipping)/i";
+
+// Whether a successful add-to-cart + Checkout click actually landed on a REAL
+// checkout with an item — the guard against a silently-no-op'd add-to-cart that
+// leaves an EMPTY cart still scoring as "cart reached". Polls (a wizard checkout
+// like BigCartel loads its first step slowly): an explicit empty-cart message is
+// the one hard NO; a payment surface / order context / wizard form is a clear
+// YES; and if neither appears in the budget but the page is NOT an empty cart, we
+// clicked Checkout successfully, so treat it as reached and let the fill step's
+// own waits drive it.
+async function checkoutReached(page: any): Promise<boolean> {
+  const deadline = Date.now() + 8000;
+  while (Date.now() < deadline) {
+    if (await visible(page, EMPTY_CART_SEL, 400)) return false;
+    const signals = await classifyCheckoutSignals(page);
+    if (signals.stripeInline || (await hasVisibleCardField(page))) return true;
+    if (await visible(page, 'iframe[src*="buy.paddle.com"]', 400)) return true;
+    if (await visible(page, ORDER_CONTEXT_SEL, 500)) return true;
+    await timer(600);
+  }
+  return !(await visible(page, EMPTY_CART_SEL, 500));
+}
+
 // Open a generic storefront's checkout: click Add-to-cart, then Checkout, and
-// report whether a payment surface (Stripe iframe OR direct card inputs) is now
-// reachable.
+// report whether a REAL checkout (payment surface or order context with an item)
+// was actually reached.
 async function openStorefrontCheckout(
   page: any,
   scenario: Scenario,
@@ -245,17 +279,13 @@ async function openStorefrontCheckout(
     if (!clicked) continue;
     log(id, `checkout via ${sel}`);
     await timer(3500);
-    return true;
+    // Verify the click actually landed on a real checkout (with an item), not an
+    // empty-cart page from a silently-no-op'd add-to-cart.
+    return checkoutReached(page);
   }
-  // Some storefronts (Ecwid, Snipcart, Paddle) open the checkout as an overlay
-  // right after add-to-cart; treat a visible card surface — Stripe iframe, direct
-  // card inputs (FastSpring), or a Paddle overlay iframe — as success.
-  const signals = await classifyCheckoutSignals(page);
-  if (signals.stripeInline || (await hasVisibleCardField(page))) return true;
-  return page
-    .waitForSelector('iframe[src*="buy.paddle.com"]', { timeout: 700, state: "visible" })
-    .then(() => true)
-    .catch(() => false);
+  // No Checkout affordance — some storefronts (Ecwid, Snipcart, Paddle) open the
+  // checkout as an overlay right after add-to-cart. Same verification.
+  return checkoutReached(page);
 }
 
 export interface RunOptions {
