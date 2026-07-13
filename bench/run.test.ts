@@ -25,6 +25,11 @@ describe("parseArgs", () => {
     expect(() => parseArgs(["--maxprice=1"])).toThrow(/unknown argument/);
     expect(() => parseArgs(["--buy", "--nope"])).toThrow(/unknown argument/);
   });
+
+  test("rejects a value on the boolean --buy flag", () => {
+    expect(() => parseArgs(["--buy=false"])).toThrow(/--buy takes no value/);
+    expect(() => parseArgs(["--buy=0"])).toThrow(/--buy takes no value/);
+  });
 });
 
 describe("validateScenarios", () => {
@@ -46,7 +51,20 @@ describe("validateScenarios", () => {
     expect(() => validateScenarios([ok, ok])).toThrow(/duplicate/);
   });
 
-  test("rejects allowBuy without a numeric price", () => {
+  test("rejects allowBuy without a positive finite price", () => {
     expect(() => validateScenarios([{ ...ok, allowBuy: true }])).toThrow(/price/);
+    expect(() => validateScenarios([{ ...ok, allowBuy: true, price: -1 }])).toThrow(/price/);
+    expect(() => validateScenarios([{ ...ok, price: 0 }])).toThrow(/price/);
+  });
+
+  test("rejects a non-USD or dead-end buy scenario", () => {
+    expect(() => validateScenarios([{ ...ok, allowBuy: true, price: 2, currency: "GBP" }])).toThrow(
+      /USD/
+    );
+    expect(() =>
+      validateScenarios([
+        { ...ok, target: "cart", allowBuy: true, price: 2, expectDeadEnd: "turnstile" },
+      ])
+    ).toThrow(/allowBuy and expectDeadEnd/);
   });
 });

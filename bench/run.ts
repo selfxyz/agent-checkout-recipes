@@ -43,8 +43,25 @@ function validateScenarios(scenarios: Scenario[]): void {
       );
     if (s?.expectDeadEnd !== undefined && !DEAD_END_TYPES.includes(s.expectDeadEnd))
       problems.push(`${at}: expectDeadEnd must be one of ${DEAD_END_TYPES.join(", ")}`);
-    if (s?.allowBuy === true && typeof s?.price !== "number")
-      problems.push(`${at}: allowBuy requires a numeric price`);
+    if (
+      s?.price !== undefined &&
+      (typeof s.price !== "number" || !Number.isFinite(s.price) || s.price <= 0)
+    )
+      problems.push(`${at}: price must be a positive finite number`);
+    // Buy-mode invariants — this spends REAL money, so fail closed here rather
+    // than let a bad scenario reach a live submit.
+    if (s?.allowBuy === true) {
+      if (typeof s?.price !== "number" || !Number.isFinite(s.price) || s.price <= 0)
+        problems.push(`${at}: allowBuy requires a positive finite price`);
+      // The --max-price cap is USD and the bench can't read the live total to
+      // convert, so a non-USD priced buy could exceed the intended dollar cap.
+      if (s?.currency !== undefined && s.currency.toUpperCase() !== "USD")
+        problems.push(`${at}: allowBuy scenarios must be priced in USD (got ${s.currency})`);
+      // A scenario that's both a dead-end AND buyable would submit real money if
+      // the expected blocker isn't detected live (site changed / classifier miss).
+      if (s?.expectDeadEnd !== undefined)
+        problems.push(`${at}: a scenario cannot be both allowBuy and expectDeadEnd`);
+    }
   }
   if (problems.length) throw new Error(`invalid bench/scenarios.json:\n  ${problems.join("\n  ")}`);
 }
@@ -66,8 +83,12 @@ function parseArgs(argv: string[]): { buy: boolean; only?: string[]; maxPrice: n
     const a = argv[idx.v];
     if (a === undefined) continue;
     const name = a.startsWith("--") ? a.split("=")[0] : a;
-    if (name === "--buy") buy = true;
-    else if (name === "--only") only = takeValue(a, idx).split(",").filter(Boolean);
+    if (name === "--buy") {
+      // A boolean flag takes no value: reject `--buy=false` / `--buy=0` rather
+      // than silently enabling real-money submits despite an intent to disable.
+      if (a.includes("=")) throw new Error(`--buy takes no value (got "${a}")`);
+      buy = true;
+    } else if (name === "--only") only = takeValue(a, idx).split(",").filter(Boolean);
     else if (name === "--max-price") {
       const raw = takeValue(a, idx);
       maxPrice = Number(raw);

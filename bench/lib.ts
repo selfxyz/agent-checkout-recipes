@@ -376,10 +376,20 @@ export async function runScenario(
     // e.g. a target:"fill" scenario can still be a real-money buy candidate).
     const wantBuy = opts.buy && scenario.allowBuy === true;
     if (wantBuy) {
-      if (scenario.price === undefined || scenario.price > opts.maxBuyPrice) {
+      // Last-line guard before a REAL submit (validateScenarios enforces the same
+      // up front): a defined, positive, finite, USD price at/under the cap. A
+      // non-USD or non-positive price is blocked because the dollar cap can't be
+      // compared to it (the bench can't read the live total to convert).
+      const currencyOk = (scenario.currency ?? "USD").toUpperCase() === "USD";
+      const priceOk =
+        typeof scenario.price === "number" &&
+        Number.isFinite(scenario.price) &&
+        scenario.price > 0 &&
+        scenario.price <= opts.maxBuyPrice;
+      if (!priceOk || !currencyOk) {
         return result("cart", {
           platform,
-          blocker: `error:buy blocked by price guard (price=${scenario.price}, cap=${opts.maxBuyPrice})`,
+          blocker: `error:buy blocked by price guard (price=${scenario.price} ${scenario.currency ?? "USD"}, cap=$${opts.maxBuyPrice})`,
         });
       }
       // NOTE: this cap checks the scenario's DECLARED price only. The SDK exposes
