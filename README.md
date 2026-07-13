@@ -31,15 +31,20 @@ card fill is proven; **unverified** is derived from platform structure;
 - **Files:** read the JSON under `recipes/`, or build the aggregate:
   `bun run build` → `dist/registry.json` (full bundle) and `dist/RECIPES.md`
   (one agent-readable document of every recipe).
-- **HTTP:** deployments serve the synced registry at
-  `GET <API_URL>/v1/recipes?url=<page url>` — returns the matching merchant and
-  platform recipes for the page you are on (no auth; recipes are open data).
-  Without `?url=` it returns the full index.
-- **SDK:** `recipesForUrl(url)` from `@selfxyz/agent-pay-playwright` wraps that
-  endpoint. It sends only the host + path fingerprint (query and fragment are
-  stripped), since the endpoint is unauthenticated and publicly cacheable and a
-  hosted-checkout URL can carry session/capability tokens. Host matching is
-  `www.`/trailing-dot insensitive.
+- **SDK (preferred):** `recipesForUrl(url)` from `@selfxyz/agent-pay-playwright`
+  returns the matching merchant + platform recipes for a page. It automatically
+  sends only a **host + path fingerprint** — query, fragment, and hosted-checkout
+  session tokens (Stripe `cs_…`, Shopify `/checkouts/…`) are stripped — because
+  the endpoint is unauthenticated and (for the index) cacheable. Host matching is
+  `www.`/trailing-dot insensitive. Prefer this over calling the endpoint directly.
+- **HTTP:** deployments serve the synced registry at `GET <API_URL>/v1/recipes`.
+  Pass `?url=<fingerprint>` to get the recipes for a page — **send only
+  `scheme://host/path`, not the raw page URL**: the request URL is not
+  authenticated and can reach client/proxy/API logs before the server's
+  `no-store`, so never put a checkout session token in it (strip the query,
+  fragment, and any `/checkouts/…` or `cs_…` token, exactly as the SDK does).
+  Per-URL responses are `no-store`. With no `?url=` it returns the full index
+  (public, short-cached).
 
 Agents should fetch the recipe for a page **before** improvising Playwright on
 it, and follow `packages/agent-sdk/checkout-playbooks.md` for the recon →
