@@ -17,7 +17,7 @@
 import { readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { listTokens, tokensForUrl } from "@selfxyz/agent-pay-playwright";
-import { catalogFromTokens, chromium } from "../../packages/agent-sdk/playbooks";
+import { catalogFromTokens, chromium } from "@selfxyz/agent-pay-playwright/playbooks.ts";
 import { buildBundle, loadRecipes } from "../src/registry";
 import { type RunOptions, type Scenario, type ScenarioResult, runScenario, summarize } from "./lib";
 
@@ -29,7 +29,16 @@ function parseArgs(argv: string[]): { buy: boolean; only?: string[]; maxPrice: n
     const a = argv[i];
     if (a === "--buy") buy = true;
     else if (a === "--only") only = (argv[++i] ?? "").split(",").filter(Boolean);
-    else if (a === "--max-price") maxPrice = Number(argv[++i] ?? "3");
+    else if (a === "--max-price") {
+      const raw = argv[++i] ?? "";
+      maxPrice = Number(raw);
+      // Fail closed on a mistyped cap (e.g. "$3", ""): a NaN cap makes the
+      // `price > maxPrice` guard always false, which would let every priced buy
+      // through instead of blocking it.
+      if (!Number.isFinite(maxPrice) || maxPrice <= 0) {
+        throw new Error(`--max-price must be a positive number (got "${raw}")`);
+      }
+    }
   }
   return { buy, only, maxPrice };
 }

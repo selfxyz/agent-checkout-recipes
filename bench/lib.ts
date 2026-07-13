@@ -15,7 +15,7 @@ import {
   dismissConsent,
   dismissPopup,
   fillCheckout,
-} from "../../packages/agent-sdk/playbooks";
+} from "@selfxyz/agent-pay-playwright/playbooks.ts";
 import { recipesForUrl } from "../src/registry";
 import type { DeadEndType, MerchantRecipe, RegistryBundle } from "../src/types";
 
