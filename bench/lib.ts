@@ -99,8 +99,6 @@ async function driveToCheckout(
   merchant?: MerchantRecipe
 ): Promise<boolean> {
   const id = scenario.id;
-  const host = safeHost(scenario.url);
-  const path = safePath(scenario.url);
   switch (platform) {
     case "woocommerce": {
       if (!(await addToCart(page, scenario.url, (m) => log(id, m)))) return false;
@@ -117,52 +115,26 @@ async function driveToCheckout(
       await timer(3000);
       return true;
     }
-    // Stripe Payment Links are detected by host only (buy/donate.stripe.com), so
-    // the entry URL is always the hosted checkout.
+    // Hosted / overlay checkouts (Stripe Checkout & Payment Links, Lemon Squeezy,
+    // Paddle, Gumroad): the entry URL may already BE the hosted checkout, or a
+    // merchant `/buy` link may have redirected to it, or it may be a product page
+    // that needs a Buy/Checkout click. The SDK exposes no page.url() to tell which
+    // (a redirect wouldn't be visible in scenario.url anyway), so PROBE the DOM:
+    // if a checkout surface is already present we're there; otherwise drive the
+    // storefront CTA. (Gumroad PWYW: seed the price first so its CTA goes paid.)
     case "stripe-payment-link":
-      return true;
-    // The rest can be detected from a MERCHANT product/cart page (a Stripe
-    // Checkout / Lemon Squeezy / Paddle / Gumroad button or script), where the
-    // card form only appears after a Buy/Checkout click. Short-circuit ONLY when
-    // the entry URL is already the hosted checkout host/path; otherwise drive the
-    // storefront so fillCheckout runs on the real payment surface.
     case "stripe-checkout":
-      return host === "checkout.stripe.com"
-        ? true
-        : openStorefrontCheckout(page, scenario, merchant);
     case "lemonsqueezy":
-      return /(^|\.)lemonsqueezy\.com$/.test(host)
-        ? true
-        : openStorefrontCheckout(page, scenario, merchant);
+    case "paddle":
     case "gumroad": {
-      if (path.startsWith("/checkout")) return true;
-      // Pay-what-you-want Gumroad: enter the price BEFORE the "I want this" CTA,
-      // or the flow can stay in a free/validation state with no card checkout.
-      await seedCustomPrice(page, scenario);
+      if (platform === "gumroad") await seedCustomPrice(page, scenario);
+      if (await checkoutReached(page)) return true;
       return openStorefrontCheckout(page, scenario, merchant);
     }
-    case "paddle":
-      return host === "buy.paddle.com" ? true : openStorefrontCheckout(page, scenario, merchant);
     // Wizard storefronts: click through add-to-cart → checkout; fillCheckout's
     // advanceWizard handles the rest.
     default:
       return openStorefrontCheckout(page, scenario, merchant);
-  }
-}
-
-function safeHost(url: string): string {
-  try {
-    return new URL(url).hostname.toLowerCase();
-  } catch {
-    return "";
-  }
-}
-
-function safePath(url: string): string {
-  try {
-    return new URL(url).pathname.toLowerCase();
-  } catch {
-    return "";
   }
 }
 
