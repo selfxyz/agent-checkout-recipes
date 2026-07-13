@@ -345,10 +345,13 @@ export async function runScenario(
     await dismissConsent(page);
     await dismissPopup(page);
 
+    // A merchant recipe's `platform: "custom"` is NOT an executable playbook
+    // platform (ko-fi/payhip/itch.io), so ignore it as a hint and let live
+    // detectPlatform run instead of driving through the generic path blind.
+    const hinted = known.merchant?.platform ?? known.platform?.id;
     const platform =
       scenario.platform ??
-      (known.merchant?.platform as Platform | undefined) ??
-      (known.platform?.id as Platform | undefined) ??
+      (hinted && hinted !== "custom" ? (hinted as Platform) : undefined) ??
       (await detectPlatform(page));
     log(id, `platform: ${platform}`);
     if (platform === "unknown") return result("reach", { blocker: "error:platform unknown" });

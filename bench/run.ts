@@ -50,12 +50,28 @@ async function runOnce(
   bundle: ReturnType<typeof buildBundle>,
   opts: RunOptions
 ): Promise<ScenarioResult> {
-  const browser = await chromium.launch();
+  let browser: Awaited<ReturnType<typeof chromium.launch>> | undefined;
   try {
+    browser = await chromium.launch();
     const page = await browser.newPage();
     return await runScenario(page, scenario, cat, bundle, opts);
+  } catch (e) {
+    // A browser-setup failure (cold-start launch / context closed) must become a
+    // classified, retryable result — not escape and abort the whole run. Genuine
+    // configuration errors (no API key / no cards) are thrown earlier in main(),
+    // before any scenario, so they still abort.
+    const msg = e instanceof Error ? e.message : String(e);
+    return {
+      id: scenario.id,
+      url: scenario.url,
+      target: scenario.target,
+      level: "none",
+      pass: false,
+      blocker: `error:setup browser ${msg.slice(0, 120)}`,
+      durationMs: 0,
+    };
   } finally {
-    await browser.close().catch(() => {});
+    await browser?.close().catch(() => {});
   }
 }
 
