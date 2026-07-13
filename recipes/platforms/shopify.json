@@ -7,7 +7,7 @@
   "notes": "Card fill proven on 7/7 stores in the 2026-06 campaign; completed purchases were stopped by issuer 3DS step-up, not by the recipe.",
   "detect": {
     "hosts": ["*.myshopify.com"],
-    "urlPatterns": ["/checkouts/"],
+    "urlPatterns": ["\\.myshopify\\.com/checkouts/"],
     "selectors": [
       "script[src*=\"cdn.shopify.com\"]",
       "link[href*=\"cdn.shopify.com\"]",

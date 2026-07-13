@@ -99,10 +99,15 @@ export function recipesForUrl(
     // Most specific claim wins (longest matching host pattern).
     .sort((a, b) => longestMatch(b, host) - longestMatch(a, host))[0];
 
-  const platformId = merchant?.platform;
+  // "custom" is not an executable platform (the merchant opted out), so it names
+  // no platform recipe and must NOT fall through to fingerprint inference.
+  const platformId =
+    merchant?.platform && merchant.platform !== "custom" ? merchant.platform : undefined;
   let platform = platformId ? bundle.platforms.find((p) => p.id === platformId) : undefined;
 
-  if (!platform) {
+  // Infer a platform from URL fingerprints only when NO merchant matched — a
+  // matched merchant (including a "custom" one) is authoritative for its host.
+  if (!platform && !merchant) {
     platform = bundle.platforms.find(
       (p) =>
         (p.detect.hosts ?? []).some((h) => hostMatches(host, h)) ||

@@ -25,6 +25,27 @@ import { type RunOptions, type Scenario, type ScenarioResult, runScenario, summa
 // Valid `target` levels (the reachable subset — "none"/"reach" aren't targets).
 const TARGETS = ["detect", "cart", "fill", "buy"] as const;
 
+// Executable playbook platforms (mirrors the Platform union in
+// packages/agent-sdk/playbooks.ts). A forced scenario.platform must be one of
+// these, else it's trusted as a hint and any reached level scores "detect"
+// without ever identifying a real platform.
+const PLATFORMS = [
+  "shopify",
+  "woocommerce",
+  "stripe-checkout",
+  "stripe-payment-link",
+  "lemonsqueezy",
+  "paddle",
+  "gumroad",
+  "bigcommerce",
+  "squarespace",
+  "wix",
+  "ecwid",
+  "snipcart",
+  "fastspring",
+  "bigcartel",
+] as const;
+
 // Validate contributor-edited scenarios BEFORE running: a bad `target` (typo or
 // omission) would make levelRank(target) === -1, so any reached level would
 // satisfy the pass check and a broken scenario would report full progress.
@@ -37,6 +58,10 @@ function validateScenarios(scenarios: Scenario[]): void {
     else if (seen.has(s.id)) problems.push(`duplicate scenario id "${s.id}"`);
     else seen.add(s.id);
     if (typeof s?.url !== "string" || !s.url) problems.push(`${at}: missing url`);
+    if (s?.platform !== undefined && !(PLATFORMS as readonly string[]).includes(s.platform))
+      problems.push(
+        `${at}: platform override must be one of ${PLATFORMS.join(", ")} (got ${JSON.stringify(s.platform)})`
+      );
     if (!(TARGETS as readonly string[]).includes(s?.target))
       problems.push(
         `${at}: target must be one of ${TARGETS.join(", ")} (got ${JSON.stringify(s?.target)})`

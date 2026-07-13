@@ -233,6 +233,10 @@ async function openStorefrontCheckout(
     'button:has-text("Buy now")',
     'button:has-text("I want this")',
     'a:has-text("I want this")',
+    // A plain "Buy" opens the overlay on some Paddle/overlay product pages that
+    // expose no separate Checkout link. Last, so more specific CTAs win first.
+    'button:has-text("Buy")',
+    'a:has-text("Buy")',
   ].filter((s): s is string => Boolean(s));
   for (const sel of addSelectors) {
     const present = await page

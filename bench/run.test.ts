@@ -57,6 +57,13 @@ describe("validateScenarios", () => {
     expect(() => validateScenarios([{ ...ok, price: 0 }])).toThrow(/price/);
   });
 
+  test("rejects a malformed platform override", () => {
+    expect(() => validateScenarios([{ ...ok, platform: "strpie-checkout" as never }])).toThrow(
+      /platform override/
+    );
+    expect(() => validateScenarios([{ ...ok, platform: "woocommerce" }])).not.toThrow();
+  });
+
   test("rejects a non-USD or dead-end buy scenario", () => {
     expect(() => validateScenarios([{ ...ok, allowBuy: true, price: 2, currency: "GBP" }])).toThrow(
       /USD/
