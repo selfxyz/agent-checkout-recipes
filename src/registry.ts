@@ -62,11 +62,21 @@ export function buildBundle(recipes: LoadedRecipe[], version: string): RegistryB
   };
 }
 
-// True when `host` is `pattern` or a subdomain of it ("shop.foo.com" matches
-// "foo.com" and "*.foo.com").
+// Normalize a host: lowercase, drop a trailing dot and a leading "www." so
+// www.foo.com matches the foo.com recipe (mirrors the proxy/token lookup and
+// convex/internal/recipes.ts).
+function normHost(h: string): string {
+  return h
+    .toLowerCase()
+    .replace(/\.$/, "")
+    .replace(/^www\./, "");
+}
+
+// True when `host` is `pattern` or a subdomain of it ("shop.foo.com" and
+// "www.foo.com" both match "foo.com" and "*.foo.com").
 export function hostMatches(host: string, pattern: string): boolean {
-  const h = host.toLowerCase();
-  const p = pattern.toLowerCase().replace(/^\*\./, "");
+  const h = normHost(host);
+  const p = normHost(pattern.replace(/^\*\./, ""));
   return h === p || h.endsWith(`.${p}`);
 }
 

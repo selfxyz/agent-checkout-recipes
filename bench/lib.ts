@@ -119,8 +119,18 @@ async function driveToCheckout(
     case "stripe-payment-link":
     case "stripe-checkout":
     case "lemonsqueezy":
-    case "gumroad":
       return true;
+    // Gumroad: a hosted *.gumroad.com/checkout page is the payment surface, but a
+    // product URL (/l/…) needs its "I want this!" CTA → /checkout before the card
+    // form exists. Drive the product page; treat the /checkout host as hosted.
+    case "gumroad": {
+      let path = "";
+      try {
+        path = new URL(scenario.url).pathname.toLowerCase();
+      } catch {}
+      if (path.startsWith("/checkout")) return true;
+      return openStorefrontCheckout(page, scenario, merchant);
+    }
     // Paddle: a hosted buy.paddle.com URL is already the checkout, but a MERCHANT
     // product page detected via the cdn.paddle.com fingerprint still needs its
     // Buy/Checkout click to open the overlay iframe before fillCheckout can see
@@ -178,6 +188,8 @@ async function openStorefrontCheckout(
     'button:has-text("Add to cart")',
     'button:has-text("Add to Bag")',
     'button:has-text("Buy now")',
+    'button:has-text("I want this")',
+    'a:has-text("I want this")',
   ].filter((s): s is string => Boolean(s));
   for (const sel of addSelectors) {
     const present = await page
@@ -204,16 +216,28 @@ async function openStorefrontCheckout(
       .then(() => true)
       .catch(() => false);
     if (!present) continue;
-    await page.click(sel, { timeout: 8000 }).catch(() => {});
+    // Only treat the checkout as reached if the click actually LANDS — a disabled
+    // or popup-covered button that times out must fall through to the next
+    // selector (and finally the payment-surface probe), not be reported as a
+    // reached checkout the run then scores at "cart".
+    const clicked = await page
+      .click(sel, { timeout: 8000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!clicked) continue;
     log(id, `checkout via ${sel}`);
     await timer(3500);
     return true;
   }
-  // Some storefronts (Ecwid, Snipcart) open the checkout as an overlay right
-  // after add-to-cart; treat a visible card surface — Stripe iframe OR direct
-  // card inputs (FastSpring/Paddle) — as success.
+  // Some storefronts (Ecwid, Snipcart, Paddle) open the checkout as an overlay
+  // right after add-to-cart; treat a visible card surface — Stripe iframe, direct
+  // card inputs (FastSpring), or a Paddle overlay iframe — as success.
   const signals = await classifyCheckoutSignals(page);
-  return signals.stripeInline || (await hasVisibleCardField(page));
+  if (signals.stripeInline || (await hasVisibleCardField(page))) return true;
+  return page
+    .waitForSelector('iframe[src*="buy.paddle.com"]', { timeout: 700, state: "visible" })
+    .then(() => true)
+    .catch(() => false);
 }
 
 export interface RunOptions {

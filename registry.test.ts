@@ -105,6 +105,15 @@ describe("lookup", () => {
     expect(hostMatches("shop.foo.com", "*.foo.com")).toBe(true);
     expect(hostMatches("notfoo.com", "foo.com")).toBe(false);
     expect(hostMatches("foo.com.evil.com", "foo.com")).toBe(false);
+    // www and trailing-dot normalization
+    expect(hostMatches("www.foo.com", "foo.com")).toBe(true);
+    expect(hostMatches("foo.com.", "foo.com")).toBe(true);
+    expect(hostMatches("www.foo.com", "www.foo.com")).toBe(true);
+  });
+
+  test("recipesForUrl matches a www. host to a bare-host merchant recipe", () => {
+    const { merchant } = recipesForUrl(bundle, "https://www.brushespack.com/product/x");
+    expect(merchant?.id).toBe("brushespack.com");
   });
 
   test("merchant recipe wins and pulls its platform recipe", () => {
