@@ -36,7 +36,10 @@ card fill is proven; **unverified** is derived from platform structure;
   platform recipes for the page you are on (no auth; recipes are open data).
   Without `?url=` it returns the full index.
 - **SDK:** `recipesForUrl(url)` from `@selfxyz/agent-pay-playwright` wraps that
-  endpoint.
+  endpoint. It sends only the host + path fingerprint (query and fragment are
+  stripped), since the endpoint is unauthenticated and publicly cacheable and a
+  hosted-checkout URL can carry session/capability tokens. Host matching is
+  `www.`/trailing-dot insensitive.
 
 Agents should fetch the recipe for a page **before** improvising Playwright on
 it, and follow `packages/agent-sdk/checkout-playbooks.md` for the recon →
