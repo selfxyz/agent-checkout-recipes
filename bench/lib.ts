@@ -414,6 +414,12 @@ export async function runScenario(
     reached = "detect";
 
     if (!(await driveToCheckout(page, platform, scenario, known.merchant))) {
+      // A Checkout click can land on a bot wall (Turnstile/hCaptcha) or a
+      // PayPal-only/config dead-end before any order/payment surface renders, so
+      // checkoutReached returns false — classify it as the dead-end it is rather
+      // than a generic could-not-reach failure.
+      const de = gatewayDeadEnd((await classifyCheckoutSignals(page)).gateway);
+      if (de) return result("detect", { platform, blocker: `dead-end:${de}` });
       return result("detect", { platform, blocker: "error:could not reach checkout" });
     }
     reached = "cart";
