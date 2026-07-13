@@ -1,0 +1,23 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "snipcart",
+  "kind": "platform",
+  "name": "Snipcart",
+  "status": "unverified",
+  "notes": "Derived from Snipcart's overlay checkout — validate on first use.",
+  "detect": {
+    "selectors": ["script[src*=\"cdn.snipcart.com\"]", "#snipcart", "[class*=\"snipcart\"]"]
+  },
+  "cardSurface": "stripe-payment-element",
+  "cvvTarget": "payment-frame:input[name=cvc]",
+  "steps": {
+    "addToCart": ".snipcart-add-item opens the Snipcart cart overlay → 'Checkout'.",
+    "billing": "Email + shipping inside the overlay.",
+    "payment": "Stripe Payment Element (default gateway). Card-number token, then the CVV token immediately after.",
+    "placeOrder": "'Place order', once.",
+    "outcome": "Snipcart success step."
+  },
+  "selectors": {
+    "addToCart": ".snipcart-add-item"
+  }
+}

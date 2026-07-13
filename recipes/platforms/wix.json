@@ -1,0 +1,27 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "wix",
+  "kind": "platform",
+  "name": "Wix Stores",
+  "status": "unverified",
+  "notes": "Derived from Wix's checkout structure — validate on first use.",
+  "detect": {
+    "selectors": [
+      "script[src*=\"static.parastorage.com\"]",
+      "[data-hook=\"ecom-checkout\"]",
+      "#SITE_CONTAINER[ng-app]"
+    ]
+  },
+  "cardSurface": "stripe-payment-element",
+  "cvvTarget": "payment-frame:input[name=cvc]",
+  "steps": {
+    "addToCart": "[data-hook=add-to-cart-button] → cart → 'Checkout'.",
+    "billing": "Wizard — email, then delivery address, then payment.",
+    "payment": "Stripe/Wix Payments Payment Element. Card-number token, then the CVV token immediately after.",
+    "placeOrder": "'Place Order' / 'Pay now', once.",
+    "outcome": "'Thank you' / order number."
+  },
+  "selectors": {
+    "addToCart": "[data-hook=\"add-to-cart-button\"]"
+  }
+}

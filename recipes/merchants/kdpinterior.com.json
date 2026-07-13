@@ -1,0 +1,12 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "kdpinterior.com",
+  "kind": "merchant",
+  "hosts": ["kdpinterior.com"],
+  "platform": "woocommerce",
+  "status": "dead-end",
+  "deadEnd": {
+    "type": "paypal-only",
+    "details": "PayPal PPCP; no card frame mounts after billing. Originally misclassified as inline Stripe."
+  }
+}

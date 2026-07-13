@@ -1,0 +1,12 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "reidapeterson.com",
+  "kind": "merchant",
+  "hosts": ["reidapeterson.com"],
+  "platform": "woocommerce",
+  "status": "dead-end",
+  "deadEnd": {
+    "type": "paypal-only",
+    "details": "PayPal PPCP; no inline card path found."
+  }
+}

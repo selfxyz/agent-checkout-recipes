@@ -1,0 +1,10 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "sanjosestickers.bigcartel.com",
+  "kind": "merchant",
+  "hosts": ["sanjosestickers.bigcartel.com"],
+  "platform": "bigcartel",
+  "status": "partial",
+  "notes": "4-step wizard (Cart→Details→Shipping→Payment); advance via 'Next'×2 then the payment step. Stripe Card/Payment Element preloads early — don't fill until past the last step. Checkout load is flaky run-to-run (sometimes no Details form renders); hCaptcha-invisible present.",
+  "exampleProductUrl": "https://sanjosestickers.bigcartel.com/product/sticker-1"
+}

@@ -1,0 +1,10 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "whileonearth.myshopify.com",
+  "kind": "merchant",
+  "hosts": ["whileonearth.myshopify.com"],
+  "platform": "shopify",
+  "status": "unverified",
+  "notes": "Queue candidate from the 2026-06 campaign: $2 physical notecard, hosted Shopify checkout (own card iframes, not Stripe Elements).",
+  "exampleProductUrl": "https://whileonearth.myshopify.com/products/christmas-gifts-notecard"
+}

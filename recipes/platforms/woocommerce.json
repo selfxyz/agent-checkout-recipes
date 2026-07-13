@@ -1,0 +1,44 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "woocommerce",
+  "kind": "platform",
+  "name": "WooCommerce (+ inline Stripe)",
+  "status": "verified",
+  "lastVerifiedAt": "2026-06-22",
+  "evidence": "svgkingdom.com order #35675 and brushespack.com order #681199, both confirmed by merchant email receipts",
+  "detect": {
+    "selectors": [
+      "body.woocommerce",
+      ".woocommerce-checkout",
+      ".woocommerce-page",
+      "script[src*=\"/wp-content/plugins/woocommerce\"]",
+      "link[href*=\"/wp-content/plugins/woocommerce\"]"
+    ]
+  },
+  "cardSurface": "stripe-payment-element",
+  "cvvTarget": "payment-frame:input[name=cvc]",
+  "steps": {
+    "addToCart": "Click .single_add_to_cart_button and VERIFY via the .added_to_cart link or /cart/ line items — the AJAX add silently no-ops if fired too early. Fall back to the Store API (/wp-json/wc/store/products) + /?add-to-cart=<id> seed.",
+    "billing": "Set #billing_country FIRST (it AJAX-refreshes state/postcode rules and totals), then #billing_first_name/_last_name/_email/_phone/_address_1/_city/_postcode and #billing_state. Use the card's billing-address tokens so AVS matches the issuer.",
+    "payment": "selectCardPaymentMethod() then waitStripeCardFrame(); usually a Stripe Payment Element (iframe titled 'Secure payment input frame'). Fill expiry, then the card-number token, then the CVV token immediately after.",
+    "placeOrder": "Accept T&C by clicking the LABEL (label[for=terms] — the hidden #terms input no-ops), then click #place_order once.",
+    "outcome": "Success: 'Order received' / .woocommerce-order. Declines render in .woocommerce-error."
+  },
+  "selectors": {
+    "addToCart": [
+      "button[name=\"add-to-cart\"]",
+      ".single_add_to_cart_button",
+      "a.add_to_cart_button"
+    ],
+    "country": "#billing_country",
+    "terms": ["label[for=\"terms\"]", ".woocommerce-terms-and-conditions-checkbox label"],
+    "placeOrder": "#place_order",
+    "success": ".woocommerce-order",
+    "decline": ".woocommerce-error"
+  },
+  "gotchas": [
+    "Many small WooCommerce stores use PayPal PPCP (guestEnabled:false) instead of the Stripe gateway — no guest card path; detect via classifyCheckoutSignals and skip.",
+    "Stripe iframe detection must match URL pathnames, not full URLs: accessory/express frames can carry 'elements-inner-payment' in query params as a false positive.",
+    "A sub-minimum price renders 'No valid payment method types' instead of a card frame — treat as stripe-minimum-or-config, not fillable."
+  ]
+}

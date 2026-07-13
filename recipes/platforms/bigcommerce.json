@@ -1,0 +1,24 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "bigcommerce",
+  "kind": "platform",
+  "name": "BigCommerce",
+  "status": "unverified",
+  "notes": "Derived from BigCommerce's optimized one-page checkout — validate on first use.",
+  "detect": {
+    "selectors": [
+      "script[src*=\"bigcommerce.com\"]",
+      "[data-store-hash]",
+      "link[href*=\"stencil\"]"
+    ]
+  },
+  "cardSurface": "varies",
+  "cvvTarget": "payment-frame:input[name=cvc]",
+  "steps": {
+    "addToCart": "button:has-text('Add to Cart'), then /cart.php → 'Check out'.",
+    "billing": "Multi-step wizard — email, shipping, then billing; fill visible fields and click 'Continue'.",
+    "payment": "Typically a Stripe Payment Element (or the store's PSP). Card-number token, then the CVV token immediately after.",
+    "placeOrder": "'Place Order', once.",
+    "outcome": "'Your order … received'."
+  }
+}

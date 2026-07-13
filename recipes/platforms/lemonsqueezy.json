@@ -1,0 +1,28 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "lemonsqueezy",
+  "kind": "platform",
+  "name": "Lemon Squeezy",
+  "status": "partial",
+  "notes": "Card fill proven on hosted checkouts in the 2026-06 campaign. EMBEDDED overlays (buy.lemonsqueezy.com iframe on a merchant page) nest the Stripe frame a level deeper than the SDK's frameLocator reaches — hosted pages only.",
+  "detect": {
+    "hosts": ["*.lemonsqueezy.com"],
+    "selectors": ["script[src*=\"app.lemonsqueezy.com\"]", "iframe[src*=\"lemonsqueezy.com\"]"]
+  },
+  "cardSurface": "stripe-payment-element",
+  "cvvTarget": "payment-frame:input[name=cvc]",
+  "steps": {
+    "addToCart": "None — the checkout page renders directly. For pay-what-you-want, set a non-zero price (input[name=custom_price]) to switch the free flow to paid and mount the Stripe card frame.",
+    "contact": "input[type=email], optional name.",
+    "payment": "Click the 'Card' tab, then a Stripe Payment Element (or split frames). Card-number token, then the CVV token into the payment/CVC frame immediately after.",
+    "placeOrder": "'Pay' / 'Subscribe', once.",
+    "outcome": "Success/receipt text."
+  },
+  "selectors": {
+    "customAmount": "input[name=\"custom_price\"]",
+    "cardTab": "label:has-text(\"Card\")"
+  },
+  "gotchas": [
+    "Some stores put Cloudflare Turnstile in front of checkout — detect and hand off, never solve."
+  ]
+}

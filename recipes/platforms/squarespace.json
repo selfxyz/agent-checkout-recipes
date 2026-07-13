@@ -1,0 +1,24 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "squarespace",
+  "kind": "platform",
+  "name": "Squarespace Commerce",
+  "status": "unverified",
+  "notes": "Derived from Squarespace's checkout structure — validate on first use.",
+  "detect": {
+    "selectors": [
+      "script[src*=\"squarespace.com/universal/scripts-compressed/commerce\"]",
+      "[data-controller*=\"Commerce\"]",
+      ".sqs-async-form-content"
+    ]
+  },
+  "cardSurface": "stripe-payment-element",
+  "cvvTarget": "payment-frame:input[name=cvc]",
+  "steps": {
+    "addToCart": "'Add to Cart' opens the cart drawer → 'Checkout'.",
+    "billing": "Single page: email + shipping address.",
+    "payment": "Stripe Payment Element (Squarespace Payments/Stripe). Card-number token, then the CVV token immediately after.",
+    "placeOrder": "'Place Order', once.",
+    "outcome": "Confirmation page / emailed receipt."
+  }
+}

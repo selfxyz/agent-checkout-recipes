@@ -1,0 +1,22 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "gumroad",
+  "kind": "platform",
+  "name": "Gumroad",
+  "status": "partial",
+  "notes": "The 'I want this!' cart drawer needs the in-drawer checkout step; card entry is a standard Stripe Payment Element once reached.",
+  "detect": {
+    "hosts": ["*.gumroad.com"],
+    "urlPatterns": ["gumroad\\.com/(l|checkout)"],
+    "selectors": ["script[src*=\"gumroad.com\"]", "[data-gumroad-product-id]"]
+  },
+  "cardSurface": "stripe-payment-element",
+  "cvvTarget": "payment-frame:input[name=cvc]",
+  "steps": {
+    "addToCart": "Set the price (input[aria-label*=price]) for pay-what-you-want, click 'I want this!', then follow the /checkout link or the cart-drawer 'Checkout'.",
+    "contact": "input[type=email], optional name.",
+    "payment": "Stripe Payment Element via waitStripeCardFrame. Card-number token, then the CVV token into the payment frame immediately after.",
+    "placeOrder": "'Pay' / 'Get', once.",
+    "outcome": "Success text (classifyOutcome)."
+  }
+}

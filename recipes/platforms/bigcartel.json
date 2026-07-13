@@ -1,0 +1,24 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "bigcartel",
+  "kind": "platform",
+  "name": "Big Cartel",
+  "status": "partial",
+  "notes": "4-step wizard mapped on sanjosestickers.bigcartel.com; checkout load is flaky run-to-run and an invisible hCaptcha is present.",
+  "detect": {
+    "hosts": ["*.bigcartel.com"]
+  },
+  "cardSurface": "stripe-payment-element",
+  "cvvTarget": "payment-frame:input[name=cvc]",
+  "steps": {
+    "addToCart": "'Add to Cart' → 'Check Out'.",
+    "billing": "Wizard (Cart → Details → Shipping → Payment). Advance via 'Next' twice.",
+    "payment": "The Stripe frame PRELOADS early — advance through the wizard steps without filling the card, then fill at the final step. Card-number token, then the CVV token immediately after.",
+    "placeOrder": "'Pay' / 'Place order' / 'Complete', once.",
+    "outcome": "Confirmation / decline text."
+  },
+  "gotchas": [
+    "Checkout load is flaky (sometimes no Details form renders) — RETRYABLE, re-navigate up to 3×.",
+    "hCaptcha-invisible is present; if it fires, that is a DEAD-END — hand off."
+  ]
+}

@@ -1,0 +1,9 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "thesoundhorde.lemonsqueezy.com",
+  "kind": "merchant",
+  "hosts": ["thesoundhorde.lemonsqueezy.com"],
+  "platform": "lemonsqueezy",
+  "status": "unverified",
+  "notes": "Pay-what-you-want from $1; a Cloudflare Turnstile has been observed on checkout — if it fires, classify DEAD-END and hand off."
+}

@@ -1,0 +1,12 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "bepatterns.com",
+  "kind": "merchant",
+  "hosts": ["bepatterns.com"],
+  "platform": "woocommerce",
+  "status": "dead-end",
+  "deadEnd": {
+    "type": "paypal-only",
+    "details": "PayPal PPCP with card.guestEnabled:false — no guest card path. Add-to-cart and billing fill work; no Stripe card frame ever mounts."
+  }
+}

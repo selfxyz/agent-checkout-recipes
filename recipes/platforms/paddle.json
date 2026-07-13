@@ -1,0 +1,30 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "paddle",
+  "kind": "platform",
+  "name": "Paddle",
+  "status": "unverified",
+  "notes": "Derived from Paddle's known checkout structure — validate on first use and record variants back into this recipe.",
+  "detect": {
+    "urlPatterns": ["buy\\.paddle\\.com"],
+    "selectors": [
+      "script[src*=\"cdn.paddle.com\"]",
+      "iframe[src*=\"buy.paddle.com\"]",
+      ".paddle-checkout"
+    ]
+  },
+  "cardSurface": "direct-inputs",
+  "cvvTarget": "input[autocomplete=cc-csc]",
+  "steps": {
+    "addToCart": "'Buy'/'Checkout' opens the Paddle overlay iframe (buy.paddle.com); target fields THROUGH frameLocator on that iframe — page-level selectors do not reach it. Hosted buy.paddle.com pages keep inputs in the top frame.",
+    "contact": "input[name=email]; country/postcode (Paddle is merchant of record and collects tax location).",
+    "payment": "Direct inputs (not Stripe): input[name=cardNumber] / input[autocomplete=cc-number], expiry (required), then the CVV token into input[autocomplete=cc-csc] immediately after the number.",
+    "placeOrder": "'Pay' / 'Subscribe now' inside the same frame, once.",
+    "outcome": "Paddle success screen / emailed receipt."
+  },
+  "selectors": {
+    "overlayFrame": "iframe[src*=\"buy.paddle.com\"]",
+    "cardNumber": "input[name=\"cardNumber\"]",
+    "cvv": "input[autocomplete=\"cc-csc\"]"
+  }
+}

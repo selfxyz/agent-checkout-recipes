@@ -1,0 +1,13 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "ko-fi.com",
+  "kind": "merchant",
+  "hosts": ["ko-fi.com"],
+  "platform": "custom",
+  "status": "dead-end",
+  "deadEnd": {
+    "type": "turnstile",
+    "details": "Cloudflare in front; an inline Stripe frame is reachable on good runs but the flow is flaky and full-page screenshots time out."
+  },
+  "notes": "Revisit if the Cloudflare posture changes; the payment surface itself is a standard Stripe frame."
+}

@@ -1,0 +1,37 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "shopify",
+  "kind": "platform",
+  "name": "Shopify",
+  "status": "partial",
+  "notes": "Card fill proven on 7/7 stores in the 2026-06 campaign; completed purchases were stopped by issuer 3DS step-up, not by the recipe.",
+  "detect": {
+    "hosts": ["*.myshopify.com"],
+    "urlPatterns": ["/checkouts/"],
+    "selectors": [
+      "script[src*=\"cdn.shopify.com\"]",
+      "link[href*=\"cdn.shopify.com\"]",
+      "meta[name=\"shopify-checkout-api-token\"]"
+    ]
+  },
+  "cardSurface": "shopify-card-fields",
+  "cvvTarget": "iframe[name*=card-fields-verification]:input[name=verification_value]",
+  "steps": {
+    "addToCart": "Resolve the variant from <product-path>.js and hit the /cart/<variantId>:1 permalink (bypasses TYDAL/Klaviyo popups that no-op the AJAX add), then /cart and 'Check out'. Fallback: button[name=add]. Never substitute a different variant than the URL's ?variant=.",
+    "contact": "#email; #TextField-firstName/-lastName, input[name=address1], input[name=city], input[name=postalCode], select[name=countryCode], select[name=zone].",
+    "payment": "Split iframes named card-fields-<field>-<rand>. Target by iframe[name*=card-fields-number]/-expiry/-verification/-name via frameLocator. Fill expiry and name first, the card-number token, then the CVV token immediately after into the verification frame.",
+    "placeOrder": "button#checkout-pay-button / 'Pay now', once.",
+    "outcome": "'Thank you' page / order-confirmation URL."
+  },
+  "selectors": {
+    "cardNumberFrame": "iframe[name*=\"card-fields-number\"]",
+    "expiryFrame": "iframe[name*=\"card-fields-expiry\"]",
+    "cvvFrame": "iframe[name*=\"card-fields-verification\"]",
+    "nameFrame": "iframe[name*=\"card-fields-name\"]",
+    "placeOrder": "button#checkout-pay-button"
+  },
+  "gotchas": [
+    "Only the PLURAL /checkouts/ path is Shopify's; singular /checkout/ is WooCommerce and others.",
+    "Shopify checkouts commonly trigger issuer 3DS on first automated card use — expect CHALLENGE:three_ds and hand off."
+  ]
+}

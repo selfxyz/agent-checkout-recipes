@@ -1,0 +1,31 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "stripe-checkout",
+  "kind": "platform",
+  "name": "Stripe Checkout (hosted checkout.stripe.com)",
+  "status": "partial",
+  "notes": "Same fill surface as Payment Links; pattern proven in the 2026-06 campaign.",
+  "detect": {
+    "hosts": ["checkout.stripe.com"],
+    "selectors": [
+      "form[action*=\"checkout.stripe.com\"]",
+      "script[src*=\"js.stripe.com/checkout\"]"
+    ]
+  },
+  "cardSurface": "direct-inputs",
+  "cvvTarget": "#cardCvc",
+  "steps": {
+    "addToCart": "A merchant-side 'Checkout'/'Buy' button redirects to the hosted page.",
+    "contact": "#email, plus name/address inputs directly on the page.",
+    "payment": "Direct inputs on Stripe's domain, no iframe: #cardNumber, #cardExpiry, then the CVV token into #cardCvc immediately after the number.",
+    "placeOrder": "The 'Pay' .SubmitButton, once.",
+    "outcome": "'Payment successful' / receipt page."
+  },
+  "selectors": {
+    "email": "#email",
+    "cardNumber": "#cardNumber",
+    "cardExpiry": "#cardExpiry",
+    "cardCvc": "#cardCvc",
+    "placeOrder": ".SubmitButton"
+  }
+}

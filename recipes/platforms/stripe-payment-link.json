@@ -1,0 +1,30 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "stripe-payment-link",
+  "kind": "platform",
+  "name": "Stripe Payment Links (buy.stripe.com)",
+  "status": "partial",
+  "notes": "Card fill proven in the 2026-06 campaign; no receipt-verified purchase yet.",
+  "detect": {
+    "hosts": ["buy.stripe.com", "donate.stripe.com"]
+  },
+  "cardSurface": "direct-inputs",
+  "cvvTarget": "#cardCvc",
+  "steps": {
+    "addToCart": "None — the link IS the checkout. Donation/pay-what-you-want links show a custom-amount box (input[inputmode=decimal]); fill the explicit amount first.",
+    "contact": "#email.",
+    "payment": "Direct inputs on Stripe's domain, no iframe: #cardNumber, #cardExpiry ('06 / 31'), #billingName, #billingPostalCode. Fill via pressSequentially; card-number token, then the CVV token into #cardCvc immediately after.",
+    "placeOrder": "The 'Pay' .SubmitButton, once.",
+    "outcome": "'Payment to … received' / 'Thank you'."
+  },
+  "selectors": {
+    "email": "#email",
+    "cardNumber": "#cardNumber",
+    "cardExpiry": "#cardExpiry",
+    "cardCvc": "#cardCvc",
+    "billingName": "#billingName",
+    "billingZip": "#billingPostalCode",
+    "customAmount": "#customUnitAmount",
+    "placeOrder": ".SubmitButton"
+  }
+}

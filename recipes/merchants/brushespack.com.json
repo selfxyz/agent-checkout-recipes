@@ -1,0 +1,21 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "brushespack.com",
+  "kind": "merchant",
+  "hosts": ["brushespack.com"],
+  "platform": "woocommerce",
+  "status": "verified",
+  "lastVerifiedAt": "2026-06-22",
+  "evidence": "Order #681199 ('JLC's Splatoon Brushes', $2.00) confirmed by merchant email receipt",
+  "cardSurface": "stripe-payment-element",
+  "cvvTarget": "payment-frame:input[name=cvc]",
+  "overrides": {
+    "terms": "label:has-text(\"I have read and agree\")"
+  },
+  "gotchas": [
+    "The country selector defaults to UK — set #billing_country=US FIRST (AJAX refresh), then #billing_state.",
+    "Fill billing with the card's billing-address tokens (not ship) or the postcode fails AVS.",
+    "Products at $0.10 are below the Stripe minimum and never mount a card frame (stripe-minimum-or-config).",
+    "Some $1.00 products render card inputs visually but expose only Stripe express/accessory frames to the SDK — not fillable; pick a normal-priced product."
+  ]
+}

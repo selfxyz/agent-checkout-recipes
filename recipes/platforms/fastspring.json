@@ -1,0 +1,24 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "fastspring",
+  "kind": "platform",
+  "name": "FastSpring",
+  "status": "unverified",
+  "notes": "Derived from FastSpring's embedded/popup storefront — validate on first use.",
+  "detect": {
+    "selectors": ["script[src*=\"fastspring.com\"]", ".fsc-embedded-checkout"]
+  },
+  "cardSurface": "direct-inputs",
+  "cvvTarget": "input[name*=cvv]",
+  "steps": {
+    "addToCart": "Popup or embedded storefront; add item → checkout.",
+    "billing": "Email + address in FastSpring's own form (merchant of record).",
+    "payment": "FastSpring's own card inputs (not Stripe): input[name*=ccNumber], expiry first, then the card-number token, then the CVV token into input[name*=cvv] / input[autocomplete=cc-csc] immediately after.",
+    "placeOrder": "'Pay' / 'Place Order', once.",
+    "outcome": "FastSpring receipt page."
+  },
+  "selectors": {
+    "cardNumber": "input[name*=\"ccNumber\" i]",
+    "cvv": "input[name*=\"cvv\" i]"
+  }
+}

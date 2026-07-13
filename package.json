@@ -1,0 +1,17 @@
+{
+  "name": "@selfxyz/checkout-registry",
+  "version": "0.1.0",
+  "description": "Open registry of machine-readable checkout recipes for agent purchases, plus the autonomy benchmark that verifies them.",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "validate": "bun run scripts/validate.ts",
+    "build": "bun run scripts/build.ts",
+    "sync": "bun run scripts/sync.ts",
+    "bench": "bun run bench/run.ts",
+    "typecheck": "bunx tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@selfxyz/agent-pay-playwright": "workspace:*"
+  }
+}
