@@ -2,7 +2,7 @@
   "$schema": "../../schema/recipe.schema.json",
   "id": "thuecast.itch.io",
   "kind": "merchant",
-  "hosts": ["thuecast.itch.io", "itch.io"],
+  "hosts": ["thuecast.itch.io"],
   "platform": "stripe-checkout",
   "status": "unverified",
   "notes": "itch.io redirects to hosted Stripe for card payments; $1 minimum on paid downloads. Queue candidate from the 2026-06 campaign."

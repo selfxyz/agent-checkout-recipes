@@ -240,7 +240,9 @@ export async function runScenario(
       return result("detect", { platform, blocker: "error:could not reach checkout" });
     }
 
-    const wantBuy = opts.buy && scenario.allowBuy === true && scenario.target === "buy";
+    // Buy mode submits any scenario flagged `allowBuy` (independent of target —
+    // e.g. a target:"fill" scenario can still be a real-money buy candidate).
+    const wantBuy = opts.buy && scenario.allowBuy === true;
     if (wantBuy) {
       if (scenario.price === undefined || scenario.price > opts.maxBuyPrice) {
         return result("cart", {
@@ -248,7 +250,18 @@ export async function runScenario(
           blocker: `error:buy blocked by price guard (price=${scenario.price}, cap=${opts.maxBuyPrice})`,
         });
       }
-      log(id, `BUY mode: submitting once (price ${scenario.price} ${scenario.currency ?? "USD"})`);
+      // NOTE: this cap checks the scenario's DECLARED price only. The SDK exposes
+      // no text extraction (page.evaluate is disabled for security), so the
+      // benchmark cannot read the live checkout total to catch a merchant price
+      // hike or added shipping/tax. The authoritative over-cap protection is the
+      // proxy enforcing the FUNDING CARD's server-side controls (perTxnCap /
+      // confirmAbove) against the amount it scrapes from the top page — which is
+      // why the declared amount/currency is forwarded on the fill below. Keep a
+      // low --max-price AND a funding card with a tight perTxnCap for buy runs.
+      log(
+        id,
+        `BUY mode: submitting once (declared ${scenario.price} ${scenario.currency ?? "USD"})`
+      );
     }
 
     const filled = await fillCheckout(page, platform, cat, {

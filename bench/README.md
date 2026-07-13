@@ -37,9 +37,18 @@ bun run bench -- --max-price 2
 ```
 
 Dry mode is safe to run anytime — it never places an order. Buy mode settles
-**real money** on scenarios flagged `allowBuy`, capped at `--max-price` (default
-$3) on top of the card's own limits. Verify a buy via the merchant **email
-receipt**, never a confirmation page. Results are written to `bench/last-run.json`.
+**real money** on scenarios flagged `allowBuy` (any target). Verify a buy via the
+merchant **email receipt**, never a confirmation page. Results are written to
+`bench/last-run.json`.
+
+`--max-price` (default $3) is a **static declared-price** pre-check: it blocks a
+scenario whose recorded `price` exceeds the cap. It is *not* a live-total guard —
+the SDK exposes no text extraction (`page.evaluate` is disabled for security), so
+the benchmark cannot read the checkout total to catch a merchant price hike or
+added shipping/tax. The authoritative over-cap protection is the proxy enforcing
+the **funding card's** server-side controls (`perTxnCap` / `confirmAbove`) against
+the amount it scrapes from the page. For a buy run, use a funding card whose
+`perTxnCap` is set at or below your intended ceiling.
 
 ## Adding a scenario
 
