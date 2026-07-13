@@ -99,6 +99,8 @@ async function driveToCheckout(
   merchant?: MerchantRecipe
 ): Promise<boolean> {
   const id = scenario.id;
+  const host = safeHost(scenario.url);
+  const path = safePath(scenario.url);
   switch (platform) {
     case "woocommerce": {
       if (!(await addToCart(page, scenario.url, (m) => log(id, m)))) return false;
@@ -115,38 +117,47 @@ async function driveToCheckout(
       await timer(3000);
       return true;
     }
-    // Hosted checkouts: the entry URL IS the payment surface.
+    // Stripe Payment Links are detected by host only (buy/donate.stripe.com), so
+    // the entry URL is always the hosted checkout.
     case "stripe-payment-link":
-    case "stripe-checkout":
-    case "lemonsqueezy":
       return true;
-    // Gumroad: a hosted *.gumroad.com/checkout page is the payment surface, but a
-    // product URL (/l/…) needs its "I want this!" CTA → /checkout before the card
-    // form exists. Drive the product page; treat the /checkout host as hosted.
-    case "gumroad": {
-      let path = "";
-      try {
-        path = new URL(scenario.url).pathname.toLowerCase();
-      } catch {}
-      if (path.startsWith("/checkout")) return true;
-      return openStorefrontCheckout(page, scenario, merchant);
-    }
-    // Paddle: a hosted buy.paddle.com URL is already the checkout, but a MERCHANT
-    // product page detected via the cdn.paddle.com fingerprint still needs its
-    // Buy/Checkout click to open the overlay iframe before fillCheckout can see
-    // any field. Only short-circuit for the hosted host.
-    case "paddle": {
-      let host = "";
-      try {
-        host = new URL(scenario.url).hostname.toLowerCase();
-      } catch {}
-      if (host === "buy.paddle.com") return true;
-      return openStorefrontCheckout(page, scenario, merchant);
-    }
+    // The rest can be detected from a MERCHANT product/cart page (a Stripe
+    // Checkout / Lemon Squeezy / Paddle / Gumroad button or script), where the
+    // card form only appears after a Buy/Checkout click. Short-circuit ONLY when
+    // the entry URL is already the hosted checkout host/path; otherwise drive the
+    // storefront so fillCheckout runs on the real payment surface.
+    case "stripe-checkout":
+      return host === "checkout.stripe.com"
+        ? true
+        : openStorefrontCheckout(page, scenario, merchant);
+    case "lemonsqueezy":
+      return /(^|\.)lemonsqueezy\.com$/.test(host)
+        ? true
+        : openStorefrontCheckout(page, scenario, merchant);
+    case "gumroad":
+      return path.startsWith("/checkout") ? true : openStorefrontCheckout(page, scenario, merchant);
+    case "paddle":
+      return host === "buy.paddle.com" ? true : openStorefrontCheckout(page, scenario, merchant);
     // Wizard storefronts: click through add-to-cart → checkout; fillCheckout's
     // advanceWizard handles the rest.
     default:
       return openStorefrontCheckout(page, scenario, merchant);
+  }
+}
+
+function safeHost(url: string): string {
+  try {
+    return new URL(url).hostname.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+function safePath(url: string): string {
+  try {
+    return new URL(url).pathname.toLowerCase();
+  } catch {
+    return "";
   }
 }
 
@@ -197,7 +208,14 @@ async function openStorefrontCheckout(
       .then(() => true)
       .catch(() => false);
     if (!present) continue;
-    await page.click(sel, { timeout: 8000 }).catch(() => {});
+    // Only stop on a click that actually LANDS — a covered/disabled candidate
+    // that times out must fall through to the next selector, not break the loop
+    // and leave the cart empty.
+    const clicked = await page
+      .click(sel, { timeout: 8000 })
+      .then(() => true)
+      .catch(() => false);
+    if (!clicked) continue;
     log(id, `add-to-cart via ${sel}`);
     await timer(2500);
     break;
@@ -283,6 +301,11 @@ export async function runScenario(
     };
   };
 
+  // The furthest stage reached, so an exception mid-fill (e.g. a proxy
+  // merchant_blocked / approval_denied during the card-number fill) is reported
+  // at the stage it actually got to instead of resetting to "none" and skewing
+  // the autonomy score.
+  let reached: Level = "none";
   try {
     // The registry's verdict for this URL (local bundle — same data the hosted
     // /v1/recipes serves) is a HINT for platform/overrides, not a shortcut: a
@@ -294,6 +317,7 @@ export async function runScenario(
     if (!(await gotoWithRetry(page, scenario.url, id))) {
       return result("none", { blocker: "error:navigation failed after 3 attempts" });
     }
+    reached = "reach";
     await dismissConsent(page);
     await dismissPopup(page);
 
@@ -304,10 +328,12 @@ export async function runScenario(
       (await detectPlatform(page));
     log(id, `platform: ${platform}`);
     if (platform === "unknown") return result("reach", { blocker: "error:platform unknown" });
+    reached = "detect";
 
     if (!(await driveToCheckout(page, platform, scenario, known.merchant))) {
       return result("detect", { platform, blocker: "error:could not reach checkout" });
     }
+    reached = "cart";
 
     // Classify the FRESHLY-reached checkout for a dead-end (Turnstile,
     // PayPal-only, Stripe misconfig) BEFORE filling — billing entry and payment-
@@ -380,9 +406,14 @@ export async function runScenario(
       code === "cvv_entry_required" ||
       /cvv_entry_required|security code \(CVV\)|Live CVV entry/i.test(message)
     ) {
-      return result("fill", { blocker: "challenge:cvv_entry_required" });
+      // Reached the CVV leg — number + expiry landed, so at least "fill".
+      return result(levelRank("fill") > levelRank(reached) ? "fill" : reached, {
+        blocker: "challenge:cvv_entry_required",
+      });
     }
-    return result("none", { blocker: `error:${code ?? message.slice(0, 160)}` });
+    // Report the furthest stage reached, not "none": a fill-time failure at a
+    // reached checkout must score as cart/fill, not as if the page never loaded.
+    return result(reached, { blocker: `error:${code ?? message.slice(0, 160)}` });
   }
 }
 
