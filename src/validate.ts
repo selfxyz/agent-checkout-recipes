@@ -190,9 +190,17 @@ export function validateRegistry(recipes: { file: string; recipe: Recipe }[]): E
         errs.push(`${file}: platform "${recipe.platform}" has no platform recipe`);
       }
       for (const host of recipe.hosts) {
-        const owner = hostOwners.get(host);
-        if (owner) errs.push(`${file}: host "${host}" already claimed by ${owner}`);
-        hostOwners.set(host, file);
+        // Key by the NORMALIZED host (lookup strips a leading "www." and a
+        // trailing dot), so `foo.com` and `www.foo.com` can't both be claimed —
+        // they'd match the same lookups and the longer one could shadow the other.
+        const key = host
+          .toLowerCase()
+          .replace(/\.$/, "")
+          .replace(/^www\./, "");
+        const owner = hostOwners.get(key);
+        if (owner)
+          errs.push(`${file}: host "${host}" (normalized "${key}") already claimed by ${owner}`);
+        hostOwners.set(key, file);
       }
     }
   }

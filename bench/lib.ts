@@ -174,11 +174,14 @@ const EMPTY_CART_SEL = "text=/your (cart|bag|basket) is empty|cart is empty|no i
 // add-to-cart also has one. Split into a CSS-selector list and a `text=` probe:
 // a `text=` engine selector mixed into a comma-separated CSS list is INVALID and
 // throws, silently failing the whole probe (a bug from the campaign notes).
+// CHECKOUT-SPECIFIC order context only — a line item / order summary / total, or
+// a checkout-scoped advance affordance ("Continue to payment/shipping"). NOT a
+// bare Continue/Next button, which a login/newsletter/interstitial page also has
+// and would over-report a reached checkout.
 const ORDER_CONTEXT_CSS =
-  "[class*='line-item' i], [class*='order-summary' i], [class*='order-total' i]," +
-  ' button:has-text("Continue"), button:has-text("Next")';
+  "[class*='line-item' i], [class*='order-summary' i], [class*='order-total' i]";
 const ORDER_CONTEXT_TEXT =
-  "text=/order summary|subtotal|order total|place order|pay now|continue to (payment|shipping)/i";
+  "text=/order summary|subtotal|order total|place order|pay now|continue to (payment|shipping)|proceed to (payment|checkout)/i";
 
 const STRIPE_FRAME_SEL =
   'iframe[title="Secure payment input frame"], iframe[title="Secure card number input frame"],' +
@@ -345,6 +348,17 @@ export async function runScenario(
     reached = "reach";
     await dismissConsent(page);
     await dismissPopup(page);
+
+    // A bot wall (Cloudflare Turnstile / hCaptcha) can sit on the ENTRY page,
+    // before any platform fingerprint loads — classify it up front so a
+    // correctly-refused scenario is reported as dead-end:turnstile, not
+    // failed as unknown-platform. Only the turnstile signal is safe this early:
+    // paypal-only/stripe-config are checkout-stage signals and are classified on
+    // the pristine checkout below (a product page can show PayPal express buttons
+    // without being a dead-end).
+    if ((await classifyCheckoutSignals(page)).turnstile) {
+      return result("reach", { blocker: "dead-end:turnstile" });
+    }
 
     // A merchant recipe's `platform: "custom"` is NOT an executable playbook
     // platform (ko-fi/payhip/itch.io), so ignore it as a hint and let live

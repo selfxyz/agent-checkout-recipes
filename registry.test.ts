@@ -3,7 +3,8 @@ import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import { buildBundle, hostMatches, loadRecipes, recipesForUrl } from "./src/registry";
 import { CARD_SURFACES, DEAD_END_TYPES, RECIPE_STATUSES } from "./src/types";
-import { validateRecipe } from "./src/validate";
+import type { MerchantRecipe, Recipe } from "./src/types";
+import { validateRecipe, validateRegistry } from "./src/validate";
 
 describe("recipe files", () => {
   test("every recipe file validates and registry invariants hold", () => {
@@ -93,6 +94,33 @@ describe("validateRecipe", () => {
         status: "unverified",
       }).errors.join(" ")
     ).toContain("hosts");
+  });
+});
+
+describe("validateRegistry", () => {
+  const merchant = (id: string, hosts: string[]): { file: string; recipe: Recipe } => ({
+    file: `${id}.json`,
+    recipe: {
+      id,
+      kind: "merchant",
+      hosts,
+      platform: "custom",
+      status: "unverified",
+    } as MerchantRecipe,
+  });
+
+  test("flags two recipes that claim a host and its www. alias", () => {
+    const errs = validateRegistry([
+      merchant("foo.com", ["foo.com"]),
+      merchant("www", ["www.foo.com"]),
+    ]);
+    expect(errs.join(" ")).toMatch(/already claimed/);
+  });
+
+  test("accepts distinct hosts", () => {
+    expect(validateRegistry([merchant("a.com", ["a.com"]), merchant("b.com", ["b.com"])])).toEqual(
+      []
+    );
   });
 });
 
