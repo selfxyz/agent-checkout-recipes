@@ -122,6 +122,23 @@ describe("validateRegistry", () => {
       []
     );
   });
+
+  test("rejects a platform recipe whose id is not an executable playbook", () => {
+    const bad: { file: string; recipe: Recipe } = {
+      file: "strpie-checkout.json",
+      recipe: {
+        id: "strpie-checkout",
+        kind: "platform",
+        name: "typo",
+        status: "unverified",
+        detect: { hosts: ["x.com"] },
+        cardSurface: "direct-inputs",
+        cvvTarget: "#c",
+        steps: { payment: "p", placeOrder: "o", outcome: "s" },
+      } as Recipe,
+    };
+    expect(validateRegistry([bad]).join(" ")).toMatch(/not an executable playbook/);
+  });
 });
 
 describe("lookup", () => {

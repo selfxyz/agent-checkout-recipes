@@ -5,6 +5,7 @@
 import {
   CARD_SURFACES,
   DEAD_END_TYPES,
+  EXECUTABLE_PLATFORMS,
   type MerchantRecipe,
   type PlatformRecipe,
   RECIPE_STATUSES,
@@ -184,6 +185,15 @@ export function validateRegistry(recipes: { file: string; recipe: Recipe }[]): E
     const prior = ids.get(recipe.id);
     if (prior) errs.push(`${file}: duplicate id "${recipe.id}" (also in ${prior})`);
     ids.set(recipe.id, file);
+
+    // A platform recipe's id MUST be an executable playbook id — otherwise a
+    // typo'd id (e.g. "strpie-checkout") plus a merchant referencing it would
+    // pass the has-a-recipe check yet cast to a non-existent Platform at runtime.
+    if (recipe.kind === "platform" && !EXECUTABLE_PLATFORMS.includes(recipe.id as never)) {
+      errs.push(
+        `${file}: platform id "${recipe.id}" is not an executable playbook (one of ${EXECUTABLE_PLATFORMS.join(", ")})`
+      );
+    }
 
     if (recipe.kind === "merchant") {
       if (recipe.platform !== "custom" && !platformIds.has(recipe.platform)) {

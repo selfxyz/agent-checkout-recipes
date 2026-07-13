@@ -19,32 +19,11 @@ import { join } from "node:path";
 import { listTokens, tokensForUrl } from "@selfxyz/agent-pay-playwright";
 import { catalogFromTokens, chromium } from "@selfxyz/agent-pay-playwright/playbooks.ts";
 import { buildBundle, loadRecipes } from "../src/registry";
-import { DEAD_END_TYPES } from "../src/types";
+import { DEAD_END_TYPES, EXECUTABLE_PLATFORMS } from "../src/types";
 import { type RunOptions, type Scenario, type ScenarioResult, runScenario, summarize } from "./lib";
 
 // Valid `target` levels (the reachable subset — "none"/"reach" aren't targets).
 const TARGETS = ["detect", "cart", "fill", "buy"] as const;
-
-// Executable playbook platforms (mirrors the Platform union in
-// packages/agent-sdk/playbooks.ts). A forced scenario.platform must be one of
-// these, else it's trusted as a hint and any reached level scores "detect"
-// without ever identifying a real platform.
-const PLATFORMS = [
-  "shopify",
-  "woocommerce",
-  "stripe-checkout",
-  "stripe-payment-link",
-  "lemonsqueezy",
-  "paddle",
-  "gumroad",
-  "bigcommerce",
-  "squarespace",
-  "wix",
-  "ecwid",
-  "snipcart",
-  "fastspring",
-  "bigcartel",
-] as const;
 
 // Validate contributor-edited scenarios BEFORE running: a bad `target` (typo or
 // omission) would make levelRank(target) === -1, so any reached level would
@@ -58,9 +37,12 @@ function validateScenarios(scenarios: Scenario[]): void {
     else if (seen.has(s.id)) problems.push(`duplicate scenario id "${s.id}"`);
     else seen.add(s.id);
     if (typeof s?.url !== "string" || !s.url) problems.push(`${at}: missing url`);
-    if (s?.platform !== undefined && !(PLATFORMS as readonly string[]).includes(s.platform))
+    if (
+      s?.platform !== undefined &&
+      !(EXECUTABLE_PLATFORMS as readonly string[]).includes(s.platform)
+    )
       problems.push(
-        `${at}: platform override must be one of ${PLATFORMS.join(", ")} (got ${JSON.stringify(s.platform)})`
+        `${at}: platform override must be one of ${EXECUTABLE_PLATFORMS.join(", ")} (got ${JSON.stringify(s.platform)})`
       );
     if (!(TARGETS as readonly string[]).includes(s?.target))
       problems.push(
@@ -194,12 +176,17 @@ async function main() {
     // falling back to the raw catalog[0] would make the result depend on catalog
     // ordering. Unscoped cards have no `websites`.
     const unscoped = catalog.cards.filter((c) => !c.websites || c.websites.length === 0);
-    let cat = catalogFromTokens(unscoped.length ? { ...catalog, cards: unscoped } : catalog);
+    // Use ONLY unscoped cards as the base (possibly none) — never the raw
+    // catalog[0], which could be scoped to another merchant and fail as
+    // merchant_blocked based on catalog order. With no unscoped and no
+    // merchant-scoped card, the empty list makes fillCheckout report a clean
+    // "no card in catalog" instead of trying a wrong-merchant card.
+    let cat = catalogFromTokens({ ...catalog, cards: unscoped });
     try {
       const scoped = await tokensForUrl(scenario.url, { catalog });
       if (scoped.cards.length) cat = catalogFromTokens({ ...catalog, cards: scoped.cards });
     } catch {
-      /* keep the unscoped-preferred catalog */
+      /* keep the unscoped-only catalog */
     }
 
     // Fresh browser per scenario so a wedged page never taints the next. Retry

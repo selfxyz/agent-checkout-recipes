@@ -134,8 +134,13 @@ async function driveToCheckout(
       return /(^|\.)lemonsqueezy\.com$/.test(host)
         ? true
         : openStorefrontCheckout(page, scenario, merchant);
-    case "gumroad":
-      return path.startsWith("/checkout") ? true : openStorefrontCheckout(page, scenario, merchant);
+    case "gumroad": {
+      if (path.startsWith("/checkout")) return true;
+      // Pay-what-you-want Gumroad: enter the price BEFORE the "I want this" CTA,
+      // or the flow can stay in a free/validation state with no card checkout.
+      await seedCustomPrice(page, scenario);
+      return openStorefrontCheckout(page, scenario, merchant);
+    }
     case "paddle":
       return host === "buy.paddle.com" ? true : openStorefrontCheckout(page, scenario, merchant);
     // Wizard storefronts: click through add-to-cart → checkout; fillCheckout's
@@ -186,8 +191,14 @@ const ORDER_CONTEXT_TEXT =
 const STRIPE_FRAME_SEL =
   'iframe[title="Secure payment input frame"], iframe[title="Secure card number input frame"],' +
   ' iframe[title="Secure card payment input frame"]';
+// Direct card inputs across the platforms fillCheckout handles directly: Stripe
+// hosted (#cardNumber), FastSpring (ccNumber), and the generic cc-number.
 const CARD_INPUT_SEL =
-  'input[autocomplete="cc-number"], input[name="cardNumber"], input[name*="cardnumber" i], #cardNumber';
+  'input[autocomplete="cc-number"], input[name="cardNumber"], input[name*="cardnumber" i],' +
+  ' input[name*="ccNumber" i], #cardNumber';
+// Overlay checkout iframes that page-level selectors can't pierce, so their mere
+// presence is the positive "checkout reached" signal (fillCheckout handles them).
+const OVERLAY_FRAME_SEL = 'iframe[src*="buy.paddle.com"], iframe[src*="lemonsqueezy.com"]';
 
 // Whether a successful add-to-cart + Checkout click actually landed on a REAL
 // checkout with an item. Requires a POSITIVE signal — a payment surface (Stripe
@@ -202,15 +213,39 @@ const CARD_INPUT_SEL =
 async function checkoutReached(page: any): Promise<boolean> {
   const deadline = Date.now() + 14_000;
   while (Date.now() < deadline) {
+    // Check the explicit empty-cart signal FIRST: a no-op'd add-to-cart can land
+    // on a page showing BOTH "cart is empty" and a generic subtotal/order-total
+    // template element, and that must read as not-reached.
+    if (await visible(page, EMPTY_CART_SEL, 300)) return false;
     if (await visible(page, STRIPE_FRAME_SEL, 300)) return true;
     if (await visible(page, CARD_INPUT_SEL, 300)) return true;
-    if (await visible(page, 'iframe[src*="buy.paddle.com"]', 300)) return true;
+    if (await visible(page, OVERLAY_FRAME_SEL, 300)) return true;
     if (await visible(page, ORDER_CONTEXT_CSS, 300)) return true;
     if (await visible(page, ORDER_CONTEXT_TEXT, 300)) return true;
-    if (await visible(page, EMPTY_CART_SEL, 300)) return false;
     await timer(500);
   }
   return false;
+}
+
+// Seed a pay-what-you-want price into an explicit price field (Gumroad / Lemon
+// Squeezy) before the buy CTA, so the flow goes to the PAID card path instead of
+// a free/validation state. Only the scenario's declared price is entered; a
+// missing field is a harmless no-op.
+async function seedCustomPrice(page: any, scenario: Scenario): Promise<void> {
+  if (scenario.price === undefined) return;
+  for (const sel of [
+    'input[name="custom_price"]',
+    'input[aria-label*="price" i]',
+    'input[placeholder*="price" i]',
+    'input[name*="price" i]',
+  ]) {
+    if (await visible(page, sel, 700)) {
+      await page.fill(sel, scenario.price.toFixed(2)).catch(() => {});
+      await page.press(sel, "Tab").catch(() => {});
+      await timer(600);
+      return;
+    }
+  }
 }
 
 // Open a generic storefront's checkout: click Add-to-cart, then Checkout, and
@@ -234,9 +269,11 @@ async function openStorefrontCheckout(
     'button:has-text("I want this")',
     'a:has-text("I want this")',
     // A plain "Buy" opens the overlay on some Paddle/overlay product pages that
-    // expose no separate Checkout link. Last, so more specific CTAs win first.
-    'button:has-text("Buy")',
-    'a:has-text("Buy")',
+    // expose no separate Checkout link. EXACT text (:text-is) so it never matches
+    // an express-wallet button like "Buy with PayPal"/"Buy with Shop Pay" and
+    // divert the run into a wallet flow. Last, so specific CTAs win first.
+    'button:text-is("Buy")',
+    'a:text-is("Buy")',
   ].filter((s): s is string => Boolean(s));
   for (const sel of addSelectors) {
     const present = await page

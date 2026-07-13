@@ -7,6 +7,28 @@
 export const RECIPE_STATUSES = ["verified", "partial", "unverified", "dead-end"] as const;
 export type RecipeStatus = (typeof RECIPE_STATUSES)[number];
 
+// The executable playbook platforms — a platform recipe's `id` must be one of
+// these (they map to the `Platform` union in packages/agent-sdk/playbooks.ts, so
+// an agent can dispatch to `fillCheckout`). A merchant recipe's `platform` is one
+// of these or the literal "custom" (no executable playbook).
+export const EXECUTABLE_PLATFORMS = [
+  "shopify",
+  "woocommerce",
+  "stripe-checkout",
+  "stripe-payment-link",
+  "lemonsqueezy",
+  "paddle",
+  "gumroad",
+  "bigcommerce",
+  "squarespace",
+  "wix",
+  "ecwid",
+  "snipcart",
+  "fastspring",
+  "bigcartel",
+] as const;
+export type ExecutablePlatform = (typeof EXECUTABLE_PLATFORMS)[number];
+
 // The card-entry surface a checkout renders. Determines which fill strategy in
 // `packages/agent-sdk/playbooks.ts` applies.
 export const CARD_SURFACES = [
