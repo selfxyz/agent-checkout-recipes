@@ -1,8 +1,19 @@
 {
-  "extends": "../tsconfig.base.json",
   "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "noFallthroughCasesInSwitch": true,
     "noEmit": true,
-    "types": ["bun-types"]
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "types": ["bun"]
   },
-  "include": ["src/**/*.ts", "scripts/**/*.ts", "bench/**/*.ts", "*.test.ts"]
+  "include": ["src/**/*.ts", "scripts/**/*.ts", "*.test.ts"]
 }

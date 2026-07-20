@@ -1,5 +1,5 @@
-// Load and query the recipe files. Used by the build/sync scripts, the
-// benchmark, and the tests.
+// Load and query the recipe files. Used by the build/validate scripts and the
+// tests.
 import { readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
 import type { MerchantRecipe, PlatformRecipe, Recipe, RegistryBundle } from "./types";

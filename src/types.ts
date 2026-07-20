@@ -8,8 +8,8 @@ export const RECIPE_STATUSES = ["verified", "partial", "unverified", "dead-end"]
 export type RecipeStatus = (typeof RECIPE_STATUSES)[number];
 
 // The executable playbook platforms — a platform recipe's `id` must be one of
-// these (they map to the `Platform` union in packages/agent-sdk/playbooks.ts, so
-// an agent can dispatch to `fillCheckout`). A merchant recipe's `platform` is one
+// these (consumers map them to their own executable playbook/strategy per
+// platform). A merchant recipe's `platform` is one
 // of these or the literal "custom" (no executable playbook).
 export const EXECUTABLE_PLATFORMS = [
   "shopify",
@@ -29,8 +29,8 @@ export const EXECUTABLE_PLATFORMS = [
 ] as const;
 export type ExecutablePlatform = (typeof EXECUTABLE_PLATFORMS)[number];
 
-// The card-entry surface a checkout renders. Determines which fill strategy in
-// `packages/agent-sdk/playbooks.ts` applies.
+// The card-entry surface a checkout renders. Determines which fill strategy a
+// consumer applies.
 export const CARD_SURFACES = [
   "stripe-payment-element", // one iframe titled "Secure payment input frame"
   "stripe-split", // legacy split cardnumber/exp/cvc iframes
@@ -40,8 +40,7 @@ export const CARD_SURFACES = [
 ] as const;
 export type CardSurface = (typeof CARD_SURFACES)[number];
 
-// Why a merchant cannot be completed unattended. Mirrors the failure taxonomy in
-// packages/agent-sdk/checkout-playbooks.md (DEAD-END class).
+// Why a merchant cannot be completed unattended (the DEAD-END failure class).
 export const DEAD_END_TYPES = [
   "turnstile", // Cloudflare Turnstile / hCaptcha wall
   "captcha", // other CAPTCHA
@@ -85,8 +84,8 @@ interface RecipeBase {
 }
 
 // A platform recipe describes how a whole e-commerce platform's checkout works
-// (Shopify, WooCommerce+Stripe, ...). `id` matches the `Platform` union in
-// packages/agent-sdk/playbooks.ts so agents can dispatch to `fillCheckout`.
+// (Shopify, WooCommerce+Stripe, ...). `id` is the stable key an agent dispatches
+// its platform-specific checkout strategy on.
 export interface PlatformRecipe extends RecipeBase {
   kind: "platform";
   name: string;

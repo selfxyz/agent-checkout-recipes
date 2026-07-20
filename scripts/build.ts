@@ -1,5 +1,5 @@
 // Build the distributable artifacts from the recipe files:
-//   dist/registry.json — the full RegistryBundle (what the Convex sync uploads)
+//   dist/registry.json — the full RegistryBundle (what downstreams consume)
 //   dist/RECIPES.md    — one aggregated, agent-readable document of every recipe
 // Usage: bun run scripts/build.ts
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";

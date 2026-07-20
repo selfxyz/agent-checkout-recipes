@@ -1,17 +1,18 @@
 {
-  "name": "@selfxyz/checkout-registry",
+  "name": "@selfxyz/checkout-recipes",
   "version": "0.1.0",
-  "description": "Open registry of machine-readable checkout recipes for agent purchases, plus the autonomy benchmark that verifies them.",
+  "description": "Open registry of machine-readable checkout recipes for browser agents.",
+  "license": "MIT",
   "type": "module",
-  "private": true,
+  "files": ["recipes", "schema", "src", "dist"],
   "scripts": {
     "validate": "bun run scripts/validate.ts",
     "build": "bun run scripts/build.ts",
-    "sync": "bun run scripts/sync.ts",
-    "bench": "bun run bench/run.ts",
+    "test": "bun test",
     "typecheck": "bunx tsc -p tsconfig.json --noEmit"
   },
-  "dependencies": {
-    "@selfxyz/agent-pay-playwright": "workspace:*"
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.6.0"
   }
 }
