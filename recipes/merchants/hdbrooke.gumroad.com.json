@@ -1,0 +1,13 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "hdbrooke.gumroad.com",
+  "kind": "merchant",
+  "hosts": ["hdbrooke.gumroad.com"],
+  "platform": "gumroad",
+  "status": "partial",
+  "cardSurface": "stripe-payment-element",
+  "lastVerifiedAt": "2026-07-20",
+  "evidence": "Bench dry run (--test-card) reached `fill`: 'I want this!' → /checkout → Stripe Payment Element filled. No submit, so NOT purchase-verified.",
+  "notes": "Fixed-price $3.00 life-organizer template. Fifth independent Gumroad store to reach `fill` with no selector overrides.",
+  "exampleProductUrl": "https://hdbrooke.gumroad.com/l/lifeorganizertemplate"
+}

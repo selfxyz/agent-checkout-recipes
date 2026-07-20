@@ -19,6 +19,8 @@
   },
   "gotchas": [
     "Checkout load is flaky (sometimes no Details form renders) — RETRYABLE, re-navigate up to 3×.",
-    "hCaptcha-invisible is present; if it fires, that is a DEAD-END — hand off."
+    "hCaptcha-invisible is present; if it fires, that is a DEAD-END — hand off.",
+    "The 'Add to Cart' → 'Check Out' step is unreliable across stores: on 2026-07-20 four of five fresh Big Cartel stores (ydxart, kurt, chooshop, stickerpus) stalled at level `detect` with 'could not reach checkout' on in-stock, sub-$4 products. Treat Big Cartel add-to-cart as needing verification per store rather than assuming the platform flow holds.",
+    "Gateway is per-store, not platform-wide: astray3.bigcartel.com is PayPal-only (live-classified paypal-only, no card fields ever mount) while sanjosestickers.bigcartel.com runs Stripe. Recon the gateway before assuming a card path exists."
   ]
 }

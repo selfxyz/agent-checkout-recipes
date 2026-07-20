@@ -1,0 +1,13 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "sarahraedraws.gumroad.com",
+  "kind": "merchant",
+  "hosts": ["sarahraedraws.gumroad.com"],
+  "platform": "gumroad",
+  "status": "partial",
+  "cardSurface": "stripe-payment-element",
+  "lastVerifiedAt": "2026-07-20",
+  "evidence": "Bench dry run (--test-card) reached `fill`: 'I want this!' → /checkout → Stripe Payment Element filled. No submit, so NOT purchase-verified.",
+  "notes": "Fixed-price $4.00 Notion template. Fourth independent Gumroad store to reach `fill` with no selector overrides.",
+  "exampleProductUrl": "https://sarahraedraws.gumroad.com/l/teach-yourself-anything-notion"
+}

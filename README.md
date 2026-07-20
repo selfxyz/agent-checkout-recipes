@@ -26,6 +26,25 @@ happens to be TypeScript/Bun, but nothing stops you reading `recipes/` directly.
 Schema: [`schema/recipe.schema.json`](schema/recipe.schema.json).
 Types: [`src/types.ts`](src/types.ts).
 
+A complete merchant recipe — dead ends are first-class data:
+
+```json
+{
+  "id": "astray3.bigcartel.com",
+  "kind": "merchant",
+  "hosts": ["astray3.bigcartel.com"],
+  "platform": "bigcartel",
+  "status": "dead-end",
+  "lastVerifiedAt": "2026-07-20",
+  "deadEnd": {
+    "type": "paypal-only",
+    "details": "Big Cartel store whose only gateway is PayPal — no card fields ever mount."
+  },
+  "notes": "Big Cartel itself supports Stripe; the dead-end is this store's gateway choice, not the platform's.",
+  "exampleProductUrl": "https://astray3.bigcartel.com/product/3-x-3-vinyl-catapult-sticker"
+}
+```
+
 ## Honest statuses
 
 The status field is the point of the registry. It is not aspirational:

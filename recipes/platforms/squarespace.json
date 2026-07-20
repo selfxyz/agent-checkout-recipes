@@ -4,7 +4,7 @@
   "kind": "platform",
   "name": "Squarespace Commerce",
   "status": "unverified",
-  "notes": "Derived from Squarespace's checkout structure — validate on first use.",
+  "notes": "Checkout structure is still derived, not driven. What IS observed (letteringworks.com, 2026-07-20): the bench stalls at `detect` with 'could not reach checkout' because the add-to-cart control carries no matching button TEXT — a text-based add-to-cart cascade finds nothing even after the commerce block hydrates. Target `.sqs-add-to-cart-button` by class instead.",
   "detect": {
     "selectors": [
       "script[src*=\"squarespace.com/universal/scripts-compressed/commerce\"]",
@@ -15,10 +15,14 @@
   "cardSurface": "stripe-payment-element",
   "cvvTarget": "payment-frame:input[name=cvc]",
   "steps": {
-    "addToCart": "'Add to Cart' opens the cart drawer → 'Checkout'.",
+    "addToCart": "Click `.sqs-add-to-cart-button` (NOT a text match — the control renders no add/cart innerText), which opens the cart drawer → 'Checkout'.",
     "billing": "Single page: email + shipping address.",
     "payment": "Stripe Payment Element (Squarespace Payments/Stripe). Card-number token, then the CVV token immediately after.",
     "placeOrder": "'Place Order', once.",
     "outcome": "Confirmation page / emailed receipt."
+  },
+  "selectors": {
+    "addToCart": ".sqs-add-to-cart-button",
+    "commerceBlock": "[data-item-id]"
   }
 }

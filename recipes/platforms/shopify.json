@@ -4,7 +4,7 @@
   "kind": "platform",
   "name": "Shopify",
   "status": "partial",
-  "notes": "Card fill proven on 7/7 stores in the 2026-06 campaign; completed purchases were stopped by issuer 3DS step-up, not by the recipe.",
+  "notes": "Card fill proven on 7/7 stores in the 2026-06 campaign; completed purchases were stopped by issuer 3DS step-up, not by the recipe. REGRESSION observed 2026-07-20 on CUSTOM-DOMAIN stores: store.dftba.com and topatoco.com both stalled at level `reach` with 'platform unknown', even though a plain curl of the same product pages returns the fingerprints in abundance (480 and 26 `cdn.shopify.com` references respectively, plus `shopify-checkout-api-token`). So the markers are served but not matched at detect time — re-check the detect step against a custom-domain store before trusting `*.myshopify.com`-only coverage. shop.pusheen.com did detect and reach `cart`, so this is not universal.",
   "detect": {
     "hosts": ["*.myshopify.com"],
     "urlPatterns": ["\\.myshopify\\.com/checkouts/"],

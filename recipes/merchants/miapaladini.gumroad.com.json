@@ -1,0 +1,13 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "miapaladini.gumroad.com",
+  "kind": "merchant",
+  "hosts": ["miapaladini.gumroad.com"],
+  "platform": "gumroad",
+  "status": "partial",
+  "cardSurface": "stripe-payment-element",
+  "lastVerifiedAt": "2026-07-20",
+  "evidence": "Bench dry run (--test-card) reached `fill`: driven product → /checkout → Stripe Payment Element filled. No submit, so NOT purchase-verified.",
+  "notes": "Fixed-price $2.99 digital product (no pay-what-you-want price input to set), so the entry URL goes straight to 'I want this!' → the /checkout link. Reaching checkout is what the generic Gumroad playbook already does; no selector overrides were needed.",
+  "exampleProductUrl": "https://miapaladini.gumroad.com/l/xjtlb"
+}

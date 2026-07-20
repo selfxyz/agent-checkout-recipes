@@ -1,0 +1,15 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "onestopspiritualshoppe.company.site",
+  "kind": "merchant",
+  "hosts": ["onestopspiritualshoppe.company.site"],
+  "platform": "ecwid",
+  "status": "dead-end",
+  "lastVerifiedAt": "2026-07-20",
+  "deadEnd": {
+    "type": "paypal-only",
+    "details": "Ecwid Instant Site whose only gateway is PayPal — the run reaches the payment surface (level `cart`) and no guest card frame mounts. Live-classified paypal-only by the bench on 2026-07-20."
+  },
+  "notes": "First Ecwid store driven end-to-end. Useful as the platform's bench anchor precisely because the refusal is correct and reproducible: it exercises Ecwid detection + add-to-cart + checkout before classifying.",
+  "exampleProductUrl": "https://onestopspiritualshoppe.company.site/Red-Jasper-p828037651"
+}

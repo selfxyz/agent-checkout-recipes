@@ -1,0 +1,15 @@
+{
+  "$schema": "../../schema/recipe.schema.json",
+  "id": "astray3.bigcartel.com",
+  "kind": "merchant",
+  "hosts": ["astray3.bigcartel.com"],
+  "platform": "bigcartel",
+  "status": "dead-end",
+  "lastVerifiedAt": "2026-07-20",
+  "deadEnd": {
+    "type": "paypal-only",
+    "details": "Big Cartel store whose only gateway is PayPal — no card fields ever mount, so the checkout is classified paypal-only before the wizard's payment step. Live-classified by the bench on 2026-07-20 (level `detect`)."
+  },
+  "notes": "Counter-example to sanjosestickers.bigcartel.com: Big Cartel itself supports Stripe, so the dead-end is this store's gateway choice, not the platform's.",
+  "exampleProductUrl": "https://astray3.bigcartel.com/product/3-x-3-vinyl-catapult-sticker"
+}

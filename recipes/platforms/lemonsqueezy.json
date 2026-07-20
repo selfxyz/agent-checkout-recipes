@@ -4,7 +4,7 @@
   "kind": "platform",
   "name": "Lemon Squeezy",
   "status": "partial",
-  "notes": "Card fill proven on hosted checkouts in the 2026-06 campaign. EMBEDDED overlays (buy.lemonsqueezy.com iframe on a merchant page) nest the Stripe frame a level deeper than the SDK's frameLocator reaches — hosted pages only.",
+  "notes": "Card fill proven on hosted checkouts in the 2026-06 campaign. The Stripe frame is unreachable whenever the page nests it inside an lemonsqueezy.com iframe, because the SDK's frameLocator is single-level. NOTE (2026-07-20): this is broader than 'embedded overlays on a merchant page' — two independent `<store>.lemonsqueezy.com/checkout/buy/<uuid>` pages both tripped the embedded path and returned gateway `lemonsqueezy-embedded-card-unreachable` at level `cart`, so LS's own checkout URLs are affected too. This is an SDK reach limitation, NOT a merchant dead-end: the stores are otherwise healthy and card-payable by a human. Nested-frameLocator support in the driving SDK would likely unblock the platform.",
   "detect": {
     "hosts": ["*.lemonsqueezy.com"],
     "selectors": ["script[src*=\"app.lemonsqueezy.com\"]", "iframe[src*=\"lemonsqueezy.com\"]"]

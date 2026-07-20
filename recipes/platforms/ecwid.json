@@ -4,7 +4,7 @@
   "kind": "platform",
   "name": "Ecwid (*.company.site storefronts)",
   "status": "partial",
-  "notes": "Wizard flow mapped in the 2026-06 campaign; no receipt-verified purchase yet.",
+  "notes": "Wizard flow mapped in the 2026-06 campaign; no receipt-verified purchase yet. First end-to-end drives landed 2026-07-20: onestopspiritualshoppe.company.site reaches the payment surface (level `cart`) and classifies correctly as paypal-only, while ratrodmagazinemerchandise.company.site stalls earlier at `detect` with 'could not reach checkout' — so detection is sound but add-to-cart is not yet reliable across Instant Sites.",
   "detect": {
     "hosts": ["*.company.site", "*.ecwid.com"],
     "selectors": ["script[src*=\"app.ecwid.com\"]", ".ec-cart", "#productBrowser"]

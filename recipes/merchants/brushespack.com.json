@@ -12,7 +12,9 @@
   "overrides": {
     "terms": "label:has-text(\"I have read and agree\")"
   },
+  "notes": "STATUS CAVEAT (2026-07-20): still `verified` because order #681199 is a real receipt-backed purchase, but the store is no longer reliably drivable. It now serves an INTERMITTENT Cloudflare 'Just a moment' interstitial — plain curl and headless Chrome both get HTTP 403 on the product page, /shop/, and the Store API, and three bench attempts stalled at level `detect` with 'could not reach checkout' on a fresh, purchasable, in-stock $2.20 product. A real (non-headless) browser session does get through after the challenge settles, which is how current product URLs were refreshed. Pulled from the bundled bench set — see bench/scenarios.json $flaky.",
   "gotchas": [
+    "Cloudflare interstitial (added since the 2026-06 buy) gates the whole site intermittently; treat a 403 or a 'Just a moment' title as RETRYABLE, and refresh product URLs from a real browser session, not curl.",
     "The country selector defaults to UK — set #billing_country=US FIRST (AJAX refresh), then #billing_state.",
     "Fill billing with the card's billing-address tokens (not ship) or the postcode fails AVS.",
     "Products at $0.10 are below the Stripe minimum and never mount a card frame (stripe-minimum-or-config).",
