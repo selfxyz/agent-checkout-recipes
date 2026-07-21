@@ -3,7 +3,7 @@
   "configVersion": 1,
   "workspaces": {
     "": {
-      "name": "@selfxyz/checkout-recipes",
+      "name": "@selfxyz/agent-checkout-recipes",
       "devDependencies": {
         "@types/bun": "latest",
         "typescript": "^5.6.0",

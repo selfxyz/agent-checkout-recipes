@@ -1,5 +1,5 @@
 {
-  "name": "@selfxyz/checkout-recipes",
+  "name": "@selfxyz/agent-checkout-recipes",
   "version": "0.1.0",
   "description": "Open registry of machine-readable checkout recipes for browser agents.",
   "license": "MIT",

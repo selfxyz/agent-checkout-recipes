@@ -3,8 +3,8 @@
 You just solved (or failed to solve) a checkout. Record it here in one shot.
 
 ```bash
-gh repo fork selfxyz/checkout-recipes --clone --remote
-cd checkout-recipes
+gh repo fork selfxyz/agent-checkout-recipes --clone --remote
+cd agent-checkout-recipes
 git checkout -b recipe/<id>
 
 # Write exactly ONE file:
