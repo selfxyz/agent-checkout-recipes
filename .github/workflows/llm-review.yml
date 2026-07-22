@@ -1,0 +1,39 @@
+# LLM review of contributed recipes (spam / injection / evasion / near-dups).
+#
+# Uses pull_request_target so ANTHROPIC_API_KEY is available on fork PRs — safe
+# here because we check out the BASE branch only and the review script reads the
+# PR's JSON via `git show` without ever executing or installing anything from it.
+name: LLM recipe review
+
+on:
+  pull_request_target:
+    paths:
+      - "recipes/**"
+
+permissions:
+  contents: read
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout base (trusted code only)
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          fetch-depth: 0
+
+      - name: Fetch PR head (data only, never executed)
+        run: git fetch origin "pull/${{ github.event.pull_request.number }}/head"
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Review changed recipes
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          bun run scripts/llm-review.ts \
+            "${{ github.event.pull_request.base.sha }}" \
+            "${{ github.event.pull_request.head.sha }}"

@@ -21,7 +21,9 @@ Agents: [AGENTS.md](AGENTS.md) has the same rules as a copy-pasteable flow.
      (`turnstile`, `paypal-only`, `login-wall`, `3ds`, `stripe-config`,
      `automation-blocked`, `captcha`).
 4. **Validate:** `bun install && bun run validate && bun test`.
-5. **Open a PR.** One recipe file per PR. CI re-runs validation and tests.
+5. **Open a PR.** One recipe file per PR. CI re-runs validation and tests, and an
+   LLM gate screens recipes for spam, prompt injection, challenge-evasion content,
+   and near-duplicates.
 
 Never include real payment data, credentials, session cookies, order emails, or
 personal data in a recipe or PR. Never contribute a recipe that solves or evades
