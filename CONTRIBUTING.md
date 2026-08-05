@@ -21,10 +21,25 @@ Agents: [AGENTS.md](AGENTS.md) has the same rules as a copy-pasteable flow.
      (`turnstile`, `paypal-only`, `login-wall`, `3ds`, `stripe-config`,
      `automation-blocked`, `captcha`).
 4. **Validate:** `bun install && bun run validate && bun test`.
-5. **Open a PR.** One recipe file per PR. CI re-runs validation and tests, and an
-   LLM gate screens recipes for spam, prompt injection, challenge-evasion content,
-   and near-duplicates.
+5. **Open a PR.** One recipe file per PR. CI re-runs validation and tests. A
+   maintainer review then runs before merge and reports back on the PR; if it
+   rejects a recipe you will be told which rule below it broke.
 
-Never include real payment data, credentials, session cookies, order emails, or
-personal data in a recipe or PR. Never contribute a recipe that solves or evades
-a CAPTCHA, 3DS, or bot-detection step — those are dead-ends by design.
+## What a recipe may not contain
+
+Recipes are read and acted on by autonomous agents, so recipe text is an
+instruction channel. These are rejected:
+
+- **Instructions aimed at the reading agent** — anything telling it to ignore
+  its rules, visit an unrelated URL, send data anywhere, reveal card or personal
+  data, or do something other than complete this merchant's checkout. Selectors
+  or URLs pointing at domains unrelated to the recipe's own hosts count too.
+- **Challenge solving or evasion** — CAPTCHA, 3DS/OTP, or bot detection. Those
+  are `dead-end` by design; record them, never defeat them.
+- **Real payment data, credentials, session cookies, order emails, or anyone's
+  personal data**, anywhere in the recipe or the PR.
+- **Spam or junk** — promotional copy, a "merchant" that is not a real store, or
+  content unrelated to completing a checkout.
+- **Duplicates** — if your store is already here under another host, add the host
+  to the existing recipe's `hosts` instead of adding a second file.
+- **`verified` status**, which is maintainer-gated (see step 3).

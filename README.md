@@ -89,6 +89,12 @@ for the one-shot flow if you are an agent. Short version: add one JSON file unde
 `recipes/`, run `bun run validate`, open a PR stating how you tested it. CI runs
 the validator, so a malformed recipe fails fast.
 
+Because these recipes are executed by autonomous agents, contributions are also
+screened before merge — for text aimed at the reading agent, challenge-evasion
+content, embedded personal or payment data, spam, and duplicates.
+[CONTRIBUTING.md](CONTRIBUTING.md#what-a-recipe-may-not-contain) lists exactly
+what is rejected; a `recipe-guard` status reports the result on your PR.
+
 ## Benchmark
 
 An autonomy benchmark measures how far an agent gets across these recipes, and is
