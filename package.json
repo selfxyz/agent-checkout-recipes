@@ -7,6 +7,7 @@
   "files": ["recipes", "schema", "src", "dist"],
   "scripts": {
     "validate": "bun run scripts/validate.ts",
+    "dedupe": "bun run scripts/llm-dedupe.ts",
     "build": "bun run scripts/build.ts",
     "test": "bun test",
     "typecheck": "bunx tsc -p tsconfig.json --noEmit"

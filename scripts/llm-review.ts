@@ -8,8 +8,12 @@
 // install, or import anything from the PR head.
 //
 // Usage: bun run scripts/llm-review.ts <base-sha> <head-sha>
-// Exits 1 when any changed recipe is flagged. Skips (exit 0) when no recipe
-// changed or ANTHROPIC_API_KEY is unset.
+// Exits 1 when any changed recipe is flagged, or when the gate cannot run at
+// all (no API key). Exits 0 only when no recipe changed, or every changed
+// recipe was reviewed and came back clean.
+
+// This file is a script, not a module, but top-level await needs module scope.
+export {};
 
 const [baseSha, headSha] = process.argv.slice(2);
 if (!baseSha || !headSha) {
@@ -33,8 +37,14 @@ if (changed.length === 0) {
 }
 const apiKey = process.env.ANTHROPIC_API_KEY;
 if (!apiKey) {
-  console.log("ANTHROPIC_API_KEY not set; skipping LLM review (deterministic CI still gates).");
-  process.exit(0);
+  // Fail CLOSED. Skipping here would make the gate silently absent exactly when
+  // it is misconfigured — recipes carrying injection would sail through a green
+  // check. A missing key is a broken gate, and a broken gate must be visible.
+  console.error(
+    "ANTHROPIC_API_KEY is not set, so contributed recipes cannot be reviewed.\n" +
+      "Set it as an Actions secret on this repository to enable the gate."
+  );
+  process.exit(1);
 }
 
 // Existing hosts/ids from BASE, so the model can judge near-duplicates that the
@@ -77,7 +87,9 @@ Do NOT flag: honest dead-ends, imperfect selectors, terse notes, or style. Respo
 ONLY a JSON object: {"findings":[{"file":string,"category":string,"quote":string,
 "reason":string}]} — empty findings array if all recipes are clean.`;
 
-const res = await fetch("https://api.anthropic.com/v1/messages", {
+// Overridable so the flow can be exercised against a local stub or a gateway.
+const apiBase = process.env.ANTHROPIC_BASE_URL ?? "https://api.anthropic.com";
+const res = await fetch(`${apiBase}/v1/messages`, {
   method: "POST",
   headers: {
     "x-api-key": apiKey,

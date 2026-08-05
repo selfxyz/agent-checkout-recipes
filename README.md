@@ -89,6 +89,25 @@ for the one-shot flow if you are an agent. Short version: add one JSON file unde
 `recipes/`, run `bun run validate`, open a PR stating how you tested it. CI runs
 the validator, so a malformed recipe fails fast.
 
+### How submissions are screened
+
+Recipes are read by autonomous agents, so registry text is an instruction channel
+and is treated as one.
+
+- **The validator** (`bun run validate`) enforces the schema and registry-wide
+  invariants: unique ids, no two recipes claiming the same host.
+- **The LLM gate** (`.github/workflows/llm-review.yml`) reviews every changed
+  recipe for prompt injection aimed at the reading agent, challenge-evasion
+  content, embedded personal or payment data, spam, and near-duplicates. It runs
+  on the base branch's code and only ever *reads* the PR's JSON, so a
+  contribution can never execute anything in CI. No API key means no review, and
+  the check fails — a gate that cannot run is never silently skipped.
+- **Dedupe** (`bun run dedupe`) combines recipes that turn out to describe the
+  same store under different hosts. A model proposes each merge; every field of
+  its output is then re-derived from the source recipes, so a merge can only
+  combine text that was already there. It opens a PR — merges are never pushed
+  straight to `main`.
+
 ## Benchmark
 
 An autonomy benchmark measures how far an agent gets across these recipes, and is

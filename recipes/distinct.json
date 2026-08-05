@@ -1,0 +1,4 @@
+{
+  "$comment": "Merchant recipe ids that share a store label but are genuinely different stores (e.g. foo.com and foo.net). Each group suppresses one duplicate-candidate cluster, so a confirmed false positive is not re-reported forever. Add a group only after checking the two really are unrelated businesses.",
+  "distinct": []
+}

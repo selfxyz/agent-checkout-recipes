@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { buildBundle, hostMatches, loadRecipes, recipesForUrl } from "./src/registry";
 import { CARD_SURFACES, DEAD_END_TYPES, RECIPE_STATUSES } from "./src/types";
 import type { MerchantRecipe, Recipe } from "./src/types";
+import { clusterByStore, storeLabel, verifyMerge } from "./src/dedupe";
 import { validateRecipe, validateRegistry } from "./src/validate";
 
 describe("recipe files", () => {
@@ -220,5 +221,220 @@ describe("schema/recipe.schema.json stays in sync with types.ts", () => {
     expect(schema.definitions.status.enum).toEqual([...RECIPE_STATUSES]);
     expect(schema.definitions.cardSurface.enum).toEqual([...CARD_SURFACES]);
     expect(schema.definitions.deadEndType.enum).toEqual([...DEAD_END_TYPES]);
+  });
+});
+
+describe("duplicate detection", () => {
+  test("storeLabel names the store, not the platform", () => {
+    expect(storeLabel("sarahraedraws.gumroad.com")).toBe("sarahraedraws");
+    expect(storeLabel("whileonearth.myshopify.com")).toBe("whileonearth");
+    expect(storeLabel("onestopspiritualshoppe.company.site")).toBe("onestopspiritualshoppe");
+    // Custom domains reduce to the label left of the public suffix...
+    expect(storeLabel("shop.rufflesandrainboots.com")).toBe("rufflesandrainboots");
+    expect(storeLabel("www.svgkingdom.com")).toBe("svgkingdom");
+    expect(storeLabel("thing.co.uk")).toBe("thing");
+    // ...and punctuation variants of one name collapse together.
+    expect(storeLabel("ruffles-and-rainboots.com")).toBe("rufflesandrainboots");
+  });
+
+  const merchant = (id: string, hosts: string[], extra: Partial<MerchantRecipe> = {}) =>
+    ({
+      id,
+      kind: "merchant",
+      hosts,
+      platform: "gumroad",
+      status: "partial",
+      ...extra,
+    }) as MerchantRecipe;
+
+  test("clusters a platform subdomain with the store's own domain", () => {
+    const clusters = clusterByStore([
+      merchant("sarahraedraws.gumroad.com", ["sarahraedraws.gumroad.com"]),
+      merchant("sarahraedraws.com", ["sarahraedraws.com"]),
+      merchant("svgkingdom.com", ["svgkingdom.com"]),
+    ]);
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0]!.map((r) => r.id).sort()).toEqual([
+      "sarahraedraws.com",
+      "sarahraedraws.gumroad.com",
+    ]);
+  });
+
+  test("overlapping labels collapse into one cluster, not two", () => {
+    // A spans both labels. Emitted as [A,B] and [A,C], a --write run would merge
+    // A into B and then overwrite that result merging A into C, losing B.
+    const clusters = clusterByStore([
+      merchant("store.com", ["store.com", "shop.gumroad.com"]),
+      merchant("store.net", ["store.net"]),
+      merchant("shop.com", ["shop.com"]),
+    ]);
+    expect(clusters).toHaveLength(1);
+    expect(clusters[0]!.map((r) => r.id).sort()).toEqual([
+      "shop.com",
+      "store.com",
+      "store.net",
+    ]);
+  });
+
+  test("confirmed-distinct pairs stop being reported", () => {
+    const recipes = [
+      merchant("foo.com", ["foo.com"]),
+      merchant("foo.net", ["foo.net"]),
+    ];
+    expect(clusterByStore(recipes)).toHaveLength(1);
+    expect(clusterByStore(recipes, [["foo.com", "foo.net"]])).toEqual([]);
+    // A newcomer joining a known-distinct pair is still worth asking about.
+    expect(
+      clusterByStore([...recipes, merchant("foo.org", ["foo.org"])], [["foo.com", "foo.net"]])
+    ).toHaveLength(1);
+  });
+
+  test("the live registry has no unreviewed duplicate candidates", () => {
+    // A legitimate same-label pair is not a failure — record it in
+    // recipes/distinct.json and this goes green again.
+    const merchants = loadRecipes()
+      .map((r) => r.recipe)
+      .filter((r): r is MerchantRecipe => r.kind === "merchant");
+    const { distinct } = JSON.parse(
+      readFileSync(join(import.meta.dir, "recipes/distinct.json"), "utf8")
+    ) as { distinct: string[][] };
+    expect(clusterByStore(merchants, distinct).map((c) => c.map((r) => r.id))).toEqual([]);
+  });
+
+  describe("verifyMerge only accepts a merge built from its sources", () => {
+    const sources = [
+      merchant("a.gumroad.com", ["a.gumroad.com"], { notes: "Fixed-price digital product." }),
+      merchant("a.com", ["a.com"], { notes: "Own domain fronts the same store." }),
+    ];
+    const good = {
+      id: "a.com",
+      kind: "merchant",
+      hosts: ["a.com", "a.gumroad.com"],
+      platform: "gumroad",
+      status: "partial",
+      notes: "Own domain fronts the same store.\nFixed-price digital product.",
+    };
+
+    test("accepts a faithful merge", () => {
+      expect(verifyMerge(good, sources)).toEqual([]);
+    });
+
+    test("rejects prose the model wrote itself", () => {
+      const errs = verifyMerge({ ...good, notes: "Great store, highly recommended!" }, sources);
+      expect(errs.join(" ")).toContain("appears in no source recipe");
+    });
+
+    test("rejects hosts that are not the union", () => {
+      expect(verifyMerge({ ...good, hosts: ["a.com"] }, sources).join(" ")).toContain("union");
+    });
+
+    test("rejects an id no source claimed", () => {
+      const errs = verifyMerge({ ...good, id: "evil.com", hosts: ["a.com", "a.gumroad.com"] }, sources);
+      expect(errs.join(" ")).toContain("not one of the source ids");
+    });
+
+    test("rejects a scalar no source carried", () => {
+      expect(verifyMerge({ ...good, platform: "shopify" }, sources).join(" ")).toContain(
+        "appears in no source recipe"
+      );
+    });
+
+    test("refuses to merge a dead-end with a working recipe", () => {
+      const conflicting = [
+        sources[0]!,
+        merchant("a.com", ["a.com"], {
+          status: "dead-end",
+          deadEnd: { type: "turnstile" },
+        }),
+      ];
+      expect(verifyMerge(good, conflicting).join(" ")).toContain("needs a human");
+    });
+
+    test("rejects a merge that drops a source field", () => {
+      // The source files are deleted after a merge, so an omitted field is not
+      // a smaller recipe — it is data gone from the registry.
+      const withUrl = [
+        sources[0]!,
+        merchant("a.com", ["a.com"], {
+          notes: "Own domain fronts the same store.",
+          exampleProductUrl: "https://a.com/l/x",
+        }),
+      ];
+      expect(verifyMerge(good, withUrl).join(" ")).toContain(
+        "exampleProductUrl is set in a source but missing from the merge"
+      );
+    });
+
+    test("rejects a merge that drops a source override", () => {
+      const withOverride = [
+        sources[0]!,
+        merchant("a.com", ["a.com"], {
+          notes: "Own domain fronts the same store.",
+          overrides: { placeOrder: "#buy" },
+        }),
+      ];
+      expect(verifyMerge(good, withOverride).join(" ")).toContain(
+        "overrides.placeOrder is set in a source but missing from the merge"
+      );
+    });
+
+    test("rejects a merge that drops source prose", () => {
+      const errs = verifyMerge({ ...good, notes: "Own domain fronts the same store." }, sources);
+      expect(errs.join(" ")).toContain("source notes dropped by the merge");
+    });
+
+    test("refuses to merge sources that disagree on how checkout works", () => {
+      const conflicting = [
+        sources[0]!,
+        merchant("a.com", ["a.com"], {
+          notes: "Own domain fronts the same store.",
+          platform: "shopify",
+        }),
+      ];
+      expect(verifyMerge(good, conflicting).join(" ")).toContain("sources disagree on platform");
+    });
+
+    test("rejects prose moved between fields", () => {
+      // Words surviving somewhere is not enough: `evidence` relocated into
+      // `notes` still loses the structured field consumers read.
+      const withEvidence = [
+        sources[0]!,
+        merchant("a.com", ["a.com"], {
+          notes: "Own domain fronts the same store.",
+          evidence: "Order #123, email receipt.",
+        }),
+      ];
+      const moved = {
+        ...good,
+        notes: "Own domain fronts the same store.\nFixed-price digital product.\nOrder #123, email receipt.",
+      };
+      const errs = verifyMerge(moved, withEvidence).join(" ");
+      expect(errs).toContain("source evidence dropped by the merge");
+      expect(errs).toContain("appears in no source recipe's notes");
+    });
+
+    test("refuses to merge dead-ends blocked for different reasons", () => {
+      const conflicting = [
+        merchant("a.gumroad.com", ["a.gumroad.com"], {
+          status: "dead-end",
+          deadEnd: { type: "captcha" },
+        }),
+        merchant("a.com", ["a.com"], {
+          status: "dead-end",
+          deadEnd: { type: "paypal-only" },
+        }),
+      ];
+      const m = {
+        ...good,
+        status: "dead-end",
+        deadEnd: { type: "captcha" },
+        notes: undefined,
+      };
+      expect(verifyMerge(m, conflicting).join(" ")).toContain("sources disagree on deadEnd.type");
+    });
+
+    test("rejects unknown keys", () => {
+      expect(verifyMerge({ ...good, script: "x" }, sources).join(" ")).toContain("unknown key");
+    });
   });
 });

@@ -23,7 +23,9 @@ Agents: [AGENTS.md](AGENTS.md) has the same rules as a copy-pasteable flow.
 4. **Validate:** `bun install && bun run validate && bun test`.
 5. **Open a PR.** One recipe file per PR. CI re-runs validation and tests, and an
    LLM gate screens recipes for spam, prompt injection, challenge-evasion content,
-   and near-duplicates.
+   and near-duplicates. If your store is already in the registry under another
+   host, add the host to the existing recipe's `hosts` rather than adding a
+   second file — `bun run dedupe` otherwise merges them later.
 
 Never include real payment data, credentials, session cookies, order emails, or
 personal data in a recipe or PR. Never contribute a recipe that solves or evades

@@ -1,0 +1,44 @@
+# Combine duplicate merchant recipes. Runs on trusted code only (main, or a
+# maintainer's manual dispatch) — never on a contributor's branch — and opens a
+# PR rather than pushing, so a human still approves every merge.
+name: Dedupe recipes
+
+on:
+  schedule:
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  dedupe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Merge duplicate recipes
+        id: dedupe
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        # Exit 2 means some clusters need a human but the resolved merges are on
+        # disk and worth a PR. Any other non-zero is a crash or a failed
+        # revalidation — stop, or the next step opens a PR with broken recipes.
+        run: |
+          bun run scripts/llm-dedupe.ts --write > dedupe.log 2>&1 && code=0 || code=$?
+          cat dedupe.log
+          if [ "$code" -ne 0 ] && [ "$code" -ne 2 ]; then exit "$code"; fi
+
+      - name: Open a PR for the merges
+        uses: peter-evans/create-pull-request@v7
+        with:
+          branch: chore/dedupe-recipes
+          title: "chore: combine duplicate merchant recipes"
+          commit-message: "chore: combine duplicate merchant recipes"
+          body-path: dedupe.log
+          add-paths: recipes/**
+          delete-branch: true
