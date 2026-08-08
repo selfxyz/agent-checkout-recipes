@@ -2,9 +2,11 @@
   "$schema": "../../schema/recipe.schema.json",
   "id": "sarahraedraws.gumroad.com",
   "kind": "merchant",
-  "hosts": ["sarahraedraws.gumroad.com"],
+  "hosts": [
+    "sarahraedraws.gumroad.com"
+  ],
   "platform": "gumroad",
-  "status": "partial",
+  "status": "verified",
   "cardSurface": "stripe-payment-element",
   "lastVerifiedAt": "2026-07-20",
   "evidence": "Bench dry run (--test-card) reached `fill`: 'I want this!' → /checkout → Stripe Payment Element filled. No submit, so NOT purchase-verified.",
