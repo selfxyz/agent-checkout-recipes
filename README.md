@@ -99,13 +99,13 @@ lists exactly what is rejected, and a rejection says which rule it broke.
 
 An autonomy benchmark measures how far an agent gets across these recipes, and is
 what upgrades a status to `verified`. It currently lives upstream in the
-[`selfxyz/agent-pay`](https://github.com/selfxyz/agent-pay) monorepo because it
+[`selfxyz/agent-vault`](https://github.com/selfxyz/agent-vault) monorepo because it
 depends on a Playwright SDK that is not published to npm yet. It will move into
 this repo once that SDK ships.
 
 ## Provenance
 
-Extracted from the `registry/` workspace of `selfxyz/agent-pay`, with its git
+Extracted from the `registry/` workspace of `selfxyz/agent-vault`, with its git
 history preserved.
 
 ## License
