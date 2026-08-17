@@ -20,8 +20,9 @@ welcome as PRs.
    - `verified` — a real purchase, proven **out-of-band** (merchant email
      receipt or card statement — a confirmation page is not proof). Requires
      `evidence` and `lastVerifiedAt`. **Maintainer-gated:** contributors submit
-     `unverified` / `partial` / `dead-end` and describe the evidence in the
-     submission `note`; a maintainer confirms it and sets `verified`.
+     `unverified` / `partial` / `dead-end`; if a real purchase completed, pass
+     `verificationRequested: true` with the receipt evidence in `note` — the
+     recipe goes live as submitted and a maintainer upgrades it to `verified`.
    - `dead-end` — unattended checkout is impossible; say why in `deadEnd`
      (`turnstile`, `paypal-only`, `login-wall`, `3ds`, `stripe-config`,
      `automation-blocked`, `captcha`).
@@ -41,7 +42,9 @@ welcome as PRs.
    `GET /v1/recipes/submissions/<id>`. Outcomes: `approved` (live),
    `merged` (combined with an existing recipe for the same store), `rejected`
    (the verdict names the rule), `needs_human` (a maintainer decides — used for
-   `verified` claims and anything the screening could not settle). A clean
+   verification claims, edits to a stored recipe that drop data, platform
+   recipes, and anything the screening could not settle). If it is still
+   `pending` after your wait, poll — do not resubmit. A clean
    recipe is live within about a minute and appears here on the next export.
 
 ## What a recipe may not contain

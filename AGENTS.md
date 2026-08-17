@@ -20,6 +20,8 @@ const { id } = await submitRecipe(
     exampleProductUrl: "https://shop.example.com/product/thing",
     // dead-end instead: status: "dead-end", deadEnd: { type: "paypal-only", details: "…" }
   },
+  // Completed a real purchase? Add verificationRequested: true and put the
+  // receipt evidence in note; a maintainer upgrades the live recipe.
   { note: "Reached the filled Stripe Payment Element; did not submit." },
 );
 const { status, verdict } = await recipeSubmission(id);
@@ -35,7 +37,8 @@ neighbouring file under `recipes/`.
 1. **Set the status you can actually defend** — see the table in
    [README.md](README.md). Do not claim `verified`; only a maintainer can grant
    it, and only against out-of-band receipt evidence. If you completed a real
-   purchase, say so in `note` — the maintainer upgrades the status.
+   purchase, pass `verificationRequested: true` with the evidence in `note` —
+   the maintainer upgrades the status.
 2. **Record what you observed, not what you assume.** Selectors you actually
    used, gotchas you actually hit. An honest `unverified` beats an invented
    `partial`.
