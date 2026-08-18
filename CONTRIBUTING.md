@@ -2,10 +2,15 @@
 
 Agents: [AGENTS.md](AGENTS.md) has the same rules as a copy-pasteable flow.
 
+**This repo is a read-only export of the live registry.** Recipes are
+contributed through the API with an agent API key, screened automatically, and
+exported back here daily — so please do not open recipe PRs; they will be
+closed with a pointer to this page. Fixes to the schema, tooling or docs are
+welcome as PRs.
+
 1. **Copy the shape.** Start from an existing file in `recipes/platforms/` or
    `recipes/merchants/` (schema: `schema/recipe.schema.json`; types:
-   `src/types.ts`). Filename must be `<id>.json`; a merchant's id is its primary
-   host.
+   `src/types.ts`). A merchant's id is its primary host.
 2. **Fill in what you actually observed.** Detection fingerprints, card surface,
    per-phase steps, selector overrides, gotchas. Write steps as instructions an
    agent can follow, not marketing prose.
@@ -15,15 +20,32 @@ Agents: [AGENTS.md](AGENTS.md) has the same rules as a copy-pasteable flow.
    - `verified` — a real purchase, proven **out-of-band** (merchant email
      receipt or card statement — a confirmation page is not proof). Requires
      `evidence` and `lastVerifiedAt`. **Maintainer-gated:** contributors submit
-     `unverified` / `partial` / `dead-end` and describe the evidence in the PR;
-     a maintainer confirms it and sets `verified`.
+     `unverified` / `partial` / `dead-end`; if a real purchase completed, pass
+     `verificationRequested: true` with the receipt evidence in `note` — the
+     recipe goes live as submitted and a maintainer upgrades it to `verified`.
    - `dead-end` — unattended checkout is impossible; say why in `deadEnd`
      (`turnstile`, `paypal-only`, `login-wall`, `3ds`, `stripe-config`,
      `automation-blocked`, `captcha`).
-4. **Validate:** `bun install && bun run validate && bun test`.
-5. **Open a PR.** One recipe file per PR. CI re-runs validation and tests. A
-   maintainer review then runs before merge and reports back on the PR; if it
-   rejects a recipe you will be told which rule below it broke.
+4. **Validate locally (optional):** `bun install && bun run validate` catches
+   schema mistakes in seconds.
+5. **Submit.**
+
+   ```ts
+   import { submitRecipe, recipeSubmission } from "@agentvault/playwright";
+   const { id } = await submitRecipe(recipe, { note: "how you tested it" });
+   await recipeSubmission(id); // { status, verdict }
+   ```
+
+   or the `submit_checkout_recipe` MCP tool, or plain HTTP:
+   `POST $SELF_AGENT_PAY_API_URL/v1/recipes` with the recipe as the JSON body
+   (or `{ recipe, note }`) and `Authorization: Bearer <api key>`, then
+   `GET /v1/recipes/submissions/<id>`. Outcomes: `approved` (live),
+   `merged` (combined with an existing recipe for the same store), `rejected`
+   (the verdict names the rule), `needs_human` (a maintainer decides — used for
+   verification claims, edits to a stored recipe that drop data, platform
+   recipes, and anything the screening could not settle). If it is still
+   `pending` after your wait, poll — do not resubmit. A clean
+   recipe is live within about a minute and appears here on the next export.
 
 ## What a recipe may not contain
 
@@ -37,9 +59,10 @@ instruction channel. These are rejected:
 - **Challenge solving or evasion** — CAPTCHA, 3DS/OTP, or bot detection. Those
   are `dead-end` by design; record them, never defeat them.
 - **Real payment data, credentials, session cookies, order emails, or anyone's
-  personal data**, anywhere in the recipe or the PR.
+  personal data**, anywhere in the recipe or the note.
 - **Spam or junk** — promotional copy, a "merchant" that is not a real store, or
   content unrelated to completing a checkout.
-- **Duplicates** — if your store is already here under another host, add the host
-  to the existing recipe's `hosts` instead of adding a second file.
 - **`verified` status**, which is maintainer-gated (see step 3).
+
+A store that is already here under another host is not rejected — the
+submission is combined with the existing recipe.

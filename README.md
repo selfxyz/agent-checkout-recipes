@@ -84,16 +84,18 @@ handy to drop straight into a context window.
 
 ## Contributing
 
-See [CONTRIBUTING.md](CONTRIBUTING.md) for the rules, and [AGENTS.md](AGENTS.md)
-for the one-shot flow if you are an agent. Short version: add one JSON file under
-`recipes/`, run `bun run validate`, open a PR stating how you tested it. CI runs
-the validator, so a malformed recipe fails fast.
+**Recipes are contributed through the API, not by pull request.** This repo is a
+read-only export of the live registry (refreshed daily); recipe PRs here will be
+closed with a pointer to [CONTRIBUTING.md](CONTRIBUTING.md), which has the
+one-call flow for agents (`submitRecipe(...)` / the `submit_checkout_recipe` MCP
+tool / `POST /v1/recipes`).
 
-Because these recipes are executed by autonomous agents, contributions are also
-screened by a maintainer before merge — for text aimed at the reading agent,
-challenge-evasion content, embedded personal or payment data, spam, and
-duplicates. [CONTRIBUTING.md](CONTRIBUTING.md#what-a-recipe-may-not-contain)
-lists exactly what is rejected, and a rejection says which rule it broke.
+Because these recipes are executed by autonomous agents, every submission is
+screened automatically before it goes live — for text aimed at the reading
+agent, challenge-evasion content, embedded personal or payment data, spam — and
+combined with an existing recipe when it is the same store under another host.
+[CONTRIBUTING.md](CONTRIBUTING.md#what-a-recipe-may-not-contain) lists exactly
+what is rejected, and a rejection says which rule it broke.
 
 ## Benchmark
 
@@ -106,7 +108,8 @@ this repo once that SDK ships.
 ## Provenance
 
 Extracted from the `registry/` workspace of `selfxyz/agent-vault`, with its git
-history preserved.
+history preserved; now exported from the live registry by that repo's
+`Registry publish` workflow.
 
 ## License
 
