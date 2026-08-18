@@ -4,7 +4,8 @@
   "kind": "platform",
   "name": "Squarespace Commerce",
   "status": "unverified",
-  "notes": "Checkout structure is still derived, not driven. What IS observed (letteringworks.com, 2026-07-20): the bench stalls at `detect` with 'could not reach checkout' because the add-to-cart control carries no matching button TEXT — a text-based add-to-cart cascade finds nothing even after the commerce block hydrates. Target `.sqs-add-to-cart-button` by class instead.",
+  "cardSurface": "stripe-payment-element",
+  "cvvTarget": "payment-frame:input[name=cvc]",
   "detect": {
     "selectors": [
       "script[src*=\"squarespace.com/universal/scripts-compressed/commerce\"]",
@@ -12,17 +13,16 @@
       ".sqs-async-form-content"
     ]
   },
-  "cardSurface": "stripe-payment-element",
-  "cvvTarget": "payment-frame:input[name=cvc]",
-  "steps": {
-    "addToCart": "Click `.sqs-add-to-cart-button` (NOT a text match — the control renders no add/cart innerText), which opens the cart drawer → 'Checkout'.",
-    "billing": "Single page: email + shipping address.",
-    "payment": "Stripe Payment Element (Squarespace Payments/Stripe). Card-number token, then the CVV token immediately after.",
-    "placeOrder": "'Place Order', once.",
-    "outcome": "Confirmation page / emailed receipt."
-  },
+  "notes": "Checkout structure is still derived, not driven. What IS observed (letteringworks.com, 2026-07-20): the bench stalls at `detect` with 'could not reach checkout' because the add-to-cart control carries no matching button TEXT — a text-based add-to-cart cascade finds nothing even after the commerce block hydrates. Target `.sqs-add-to-cart-button` by class instead.",
   "selectors": {
     "addToCart": ".sqs-add-to-cart-button",
     "commerceBlock": "[data-item-id]"
+  },
+  "steps": {
+    "addToCart": "Click `.sqs-add-to-cart-button` (NOT a text match — the control renders no add/cart innerText), which opens the cart drawer → 'Checkout'.",
+    "billing": "Single page: email + shipping address.",
+    "outcome": "Confirmation page / emailed receipt.",
+    "payment": "Stripe Payment Element (Squarespace Payments/Stripe). Card-number token, then the CVV token immediately after.",
+    "placeOrder": "'Place Order', once."
   }
 }

@@ -4,7 +4,8 @@
   "kind": "platform",
   "name": "BigCommerce",
   "status": "unverified",
-  "notes": "Derived from BigCommerce's optimized one-page checkout — validate on first use.",
+  "cardSurface": "varies",
+  "cvvTarget": "payment-frame:input[name=cvc]",
   "detect": {
     "selectors": [
       "script[src*=\"bigcommerce.com\"]",
@@ -12,13 +13,12 @@
       "link[href*=\"stencil\"]"
     ]
   },
-  "cardSurface": "varies",
-  "cvvTarget": "payment-frame:input[name=cvc]",
+  "notes": "Derived from BigCommerce's optimized one-page checkout — validate on first use.",
   "steps": {
     "addToCart": "button:has-text('Add to Cart'), then /cart.php → 'Check out'.",
     "billing": "Multi-step wizard — email, shipping, then billing; fill visible fields and click 'Continue'.",
+    "outcome": "'Your order … received'.",
     "payment": "Typically a Stripe Payment Element (or the store's PSP). Card-number token, then the CVV token immediately after.",
-    "placeOrder": "'Place Order', once.",
-    "outcome": "'Your order … received'."
+    "placeOrder": "'Place Order', once."
   }
 }

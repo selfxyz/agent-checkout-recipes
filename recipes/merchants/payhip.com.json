@@ -2,11 +2,13 @@
   "$schema": "../../schema/recipe.schema.json",
   "id": "payhip.com",
   "kind": "merchant",
-  "hosts": ["payhip.com"],
+  "hosts": [
+    "payhip.com"
+  ],
   "platform": "custom",
   "status": "dead-end",
   "deadEnd": {
-    "type": "paypal-only",
-    "details": "PayPal-only guest flow, plus per-IP throttling of the checkout endpoint after repeated hits."
+    "details": "PayPal-only guest flow, plus per-IP throttling of the checkout endpoint after repeated hits.",
+    "type": "paypal-only"
   }
 }

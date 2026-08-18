@@ -2,13 +2,17 @@
   "$schema": "../../schema/recipe.schema.json",
   "id": "svgkingdom.com",
   "kind": "merchant",
-  "hosts": ["svgkingdom.com"],
+  "hosts": [
+    "svgkingdom.com"
+  ],
   "platform": "woocommerce",
   "status": "dead-end",
   "deadEnd": {
-    "type": "automation-blocked",
-    "details": "Since ~2026-06-19 the site runs a custom multi-step checkout theme (Cart→Information→Payment→Download) and add-to-cart no longer registers under automation — the cart stays empty across retries."
+    "details": "Since ~2026-06-19 the site runs a custom multi-step checkout theme (Cart→Information→Payment→Download) and add-to-cart no longer registers under automation — the cart stays empty across retries.",
+    "type": "automation-blocked"
   },
-  "notes": "Historical first verified purchase (order #35675, $2.00, 2026-06-19, email receipt) used the standard WooCommerce+Stripe Payment Element recipe; the site has since re-themed and is no longer a reliable repeat.",
-  "gotchas": ["Digital product: billing needed name+email only at time of the win."]
+  "gotchas": [
+    "Digital product: billing needed name+email only at time of the win."
+  ],
+  "notes": "Historical first verified purchase (order #35675, $2.00, 2026-06-19, email receipt) used the standard WooCommerce+Stripe Payment Element recipe; the site has since re-themed and is no longer a reliable repeat."
 }

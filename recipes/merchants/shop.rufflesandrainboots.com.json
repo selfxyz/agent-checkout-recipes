@@ -2,12 +2,16 @@
   "$schema": "../../schema/recipe.schema.json",
   "id": "shop.rufflesandrainboots.com",
   "kind": "merchant",
-  "hosts": ["shop.rufflesandrainboots.com"],
+  "hosts": [
+    "shop.rufflesandrainboots.com"
+  ],
   "platform": "woocommerce",
   "status": "dead-end",
   "deadEnd": {
-    "type": "turnstile",
-    "details": "Cloudflare Turnstile ('Verify you are human') gates the checkout; PayPal offered alongside. Cart/billing/token-fill all work up to the wall."
+    "details": "Cloudflare Turnstile ('Verify you are human') gates the checkout; PayPal offered alongside. Cart/billing/token-fill all work up to the wall.",
+    "type": "turnstile"
   },
-  "gotchas": ["Many products are free ($0) — a paid one must be selected for any future attempt."]
+  "gotchas": [
+    "Many products are free ($0) — a paid one must be selected for any future attempt."
+  ]
 }

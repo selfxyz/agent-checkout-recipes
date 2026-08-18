@@ -4,22 +4,29 @@
   "kind": "platform",
   "name": "Gumroad",
   "status": "partial",
-  "notes": "The 'I want this!' cart drawer needs the in-drawer checkout step; card entry is a standard Stripe Payment Element once reached. Best-evidenced platform in the registry as of 2026-07-20: 5 independent stores reached `fill` with no selector overrides (miapaladini, eproessentials, ellenescapes, sarahraedraws, hdbrooke).",
-  "detect": {
-    "hosts": ["*.gumroad.com"],
-    "urlPatterns": ["gumroad\\.com/(l|checkout)"],
-    "selectors": ["script[src*=\"gumroad.com\"]", "[data-gumroad-product-id]"]
-  },
   "cardSurface": "stripe-payment-element",
   "cvvTarget": "payment-frame:input[name=cvc]",
-  "steps": {
-    "addToCart": "Set the price (input[aria-label*=price]) for pay-what-you-want, click 'I want this!', then follow the /checkout link or the cart-drawer 'Checkout'.",
-    "contact": "input[type=email], optional name.",
-    "payment": "Stripe Payment Element via waitStripeCardFrame. Card-number token, then the CVV token into the payment frame immediately after.",
-    "placeOrder": "'Pay' / 'Get', once.",
-    "outcome": "Success text (classifyOutcome)."
+  "detect": {
+    "hosts": [
+      "*.gumroad.com"
+    ],
+    "selectors": [
+      "script[src*=\"gumroad.com\"]",
+      "[data-gumroad-product-id]"
+    ],
+    "urlPatterns": [
+      "gumroad\\.com/(l|checkout)"
+    ]
   },
   "gotchas": [
     "Reaching /checkout is FLAKY, not structural: on 2026-07-20 it advanced on 5 of 11 stores in one pass, and the failures ('could not reach checkout' at level `detect`) included pages structurally identical to the passes — same single 'I want this!' button, no variants, no price input (verified by hand on daribodrawing). Treat a non-advance as RETRYABLE and re-navigate; do not classify the store as a dead-end on one attempt. NB this is NOT Gumroad-specific — see the cross-platform first-attempt flake documented in bench/README.md; a retry pass fixed it on Gumroad, Big Cartel, Ecwid AND WooCommerce alike."
-  ]
+  ],
+  "notes": "The 'I want this!' cart drawer needs the in-drawer checkout step; card entry is a standard Stripe Payment Element once reached. Best-evidenced platform in the registry as of 2026-07-20: 5 independent stores reached `fill` with no selector overrides (miapaladini, eproessentials, ellenescapes, sarahraedraws, hdbrooke).",
+  "steps": {
+    "addToCart": "Set the price (input[aria-label*=price]) for pay-what-you-want, click 'I want this!', then follow the /checkout link or the cart-drawer 'Checkout'.",
+    "contact": "input[type=email], optional name.",
+    "outcome": "Success text (classifyOutcome).",
+    "payment": "Stripe Payment Element via waitStripeCardFrame. Card-number token, then the CVV token into the payment frame immediately after.",
+    "placeOrder": "'Pay' / 'Get', once."
+  }
 }

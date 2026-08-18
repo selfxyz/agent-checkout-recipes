@@ -4,25 +4,30 @@
   "kind": "platform",
   "name": "Lemon Squeezy",
   "status": "partial",
-  "notes": "Card fill proven on hosted checkouts in the 2026-06 campaign. The Stripe frame is unreachable whenever the page nests it inside an lemonsqueezy.com iframe, because the SDK's frameLocator is single-level. NOTE (2026-07-20): this is broader than 'embedded overlays on a merchant page' — two independent `<store>.lemonsqueezy.com/checkout/buy/<uuid>` pages both tripped the embedded path and returned gateway `lemonsqueezy-embedded-card-unreachable` at level `cart`, so LS's own checkout URLs are affected too. This is an SDK reach limitation, NOT a merchant dead-end: the stores are otherwise healthy and card-payable by a human. Nested-frameLocator support in the driving SDK would likely unblock the platform.",
-  "detect": {
-    "hosts": ["*.lemonsqueezy.com"],
-    "selectors": ["script[src*=\"app.lemonsqueezy.com\"]", "iframe[src*=\"lemonsqueezy.com\"]"]
-  },
   "cardSurface": "stripe-payment-element",
   "cvvTarget": "payment-frame:input[name=cvc]",
-  "steps": {
-    "addToCart": "None — the checkout page renders directly. For pay-what-you-want, set a non-zero price (input[name=custom_price]) to switch the free flow to paid and mount the Stripe card frame.",
-    "contact": "input[type=email], optional name.",
-    "payment": "Click the 'Card' tab, then a Stripe Payment Element (or split frames). Card-number token, then the CVV token into the payment/CVC frame immediately after.",
-    "placeOrder": "'Pay' / 'Subscribe', once.",
-    "outcome": "Success/receipt text."
-  },
-  "selectors": {
-    "customAmount": "input[name=\"custom_price\"]",
-    "cardTab": "label:has-text(\"Card\")"
+  "detect": {
+    "hosts": [
+      "*.lemonsqueezy.com"
+    ],
+    "selectors": [
+      "script[src*=\"app.lemonsqueezy.com\"]",
+      "iframe[src*=\"lemonsqueezy.com\"]"
+    ]
   },
   "gotchas": [
     "Some stores put Cloudflare Turnstile in front of checkout — detect and hand off, never solve."
-  ]
+  ],
+  "notes": "Card fill proven on hosted checkouts in the 2026-06 campaign. The Stripe frame is unreachable whenever the page nests it inside an lemonsqueezy.com iframe, because the SDK's frameLocator is single-level. NOTE (2026-07-20): this is broader than 'embedded overlays on a merchant page' — two independent `<store>.lemonsqueezy.com/checkout/buy/<uuid>` pages both tripped the embedded path and returned gateway `lemonsqueezy-embedded-card-unreachable` at level `cart`, so LS's own checkout URLs are affected too. This is an SDK reach limitation, NOT a merchant dead-end: the stores are otherwise healthy and card-payable by a human. Nested-frameLocator support in the driving SDK would likely unblock the platform.",
+  "selectors": {
+    "cardTab": "label:has-text(\"Card\")",
+    "customAmount": "input[name=\"custom_price\"]"
+  },
+  "steps": {
+    "addToCart": "None — the checkout page renders directly. For pay-what-you-want, set a non-zero price (input[name=custom_price]) to switch the free flow to paid and mount the Stripe card frame.",
+    "contact": "input[type=email], optional name.",
+    "outcome": "Success/receipt text.",
+    "payment": "Click the 'Card' tab, then a Stripe Payment Element (or split frames). Card-number token, then the CVV token into the payment/CVC frame immediately after.",
+    "placeOrder": "'Pay' / 'Subscribe', once."
+  }
 }
