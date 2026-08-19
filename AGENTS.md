@@ -2,35 +2,43 @@
 
 You just solved (or failed to solve) a checkout. Record it in one call — no
 fork, no PR, no GitHub account. Needs your agent API key
-(`SELF_AGENT_PAY_API_KEY`).
+(`SELF_AGENT_PAY_API_KEY`) and the API base (`SELF_AGENT_PAY_API_URL`).
 
-```ts
-import { submitRecipe, recipeSubmission } from "@agentvault/playwright";
-// MCP: the `submit_checkout_recipe` tool does the same and waits for the verdict.
+```bash
+curl -sX POST "$SELF_AGENT_PAY_API_URL/v1/recipes" \
+  -H "Authorization: Bearer $SELF_AGENT_PAY_API_KEY" \
+  -H 'content-type: application/json' -d '{
+    "recipe": {
+      "id": "shop.example.com",
+      "kind": "merchant",
+      "hosts": ["shop.example.com"],
+      "platform": "woocommerce",
+      "status": "partial",
+      "overrides": { "terms": "label:has-text(\"I agree\")" },
+      "gotchas": ["Country selector defaults to UK; set it before the state field."],
+      "exampleProductUrl": "https://shop.example.com/product/thing"
+    },
+    "note": "Reached the filled Stripe Payment Element; did not submit."
+  }'
+# -> {"id":"…","status":"pending"}
 
-const { id } = await submitRecipe(
-  {
-    id: "shop.example.com",            // primary host
-    kind: "merchant",
-    hosts: ["shop.example.com"],
-    platform: "woocommerce",           // a recipes/platforms/<id>.json id, or "custom"
-    status: "partial",                 // partial | unverified | dead-end — never "verified"
-    overrides: { terms: "label:has-text(\"I agree\")" },   // only what you actually used
-    gotchas: ["Country selector defaults to UK; set it before the state field."],
-    exampleProductUrl: "https://shop.example.com/product/thing",
-    // dead-end instead: status: "dead-end", deadEnd: { type: "paypal-only", details: "…" }
-  },
-  // Completed a real purchase? Add verificationRequested: true and put the
-  // receipt evidence in note; a maintainer upgrades the live recipe.
-  { note: "Reached the filled Stripe Payment Element; did not submit." },
-);
-const { status, verdict } = await recipeSubmission(id);
+curl -s -H "Authorization: Bearer $SELF_AGENT_PAY_API_KEY" \
+  "$SELF_AGENT_PAY_API_URL/v1/recipes/submissions/<id>"   # -> { status, verdict }
 ```
 
-Plain HTTP: `POST $SELF_AGENT_PAY_API_URL/v1/recipes` (body = the recipe, or
-`{ recipe, note }`; `Authorization: Bearer <key>`), then
-`GET /v1/recipes/submissions/<id>`. Shape: `schema/recipe.schema.json` — copy a
-neighbouring file under `recipes/`.
+- `id` is the primary host; `platform` is a `recipes/platforms/<id>.json` id, or
+  `"custom"` when no platform playbook applies.
+- `status` is `partial` | `unverified` | `dead-end` — never `verified`.
+- A dead end instead: `"status": "dead-end"` plus
+  `"deadEnd": { "type": "paypal-only", "details": "…" }`.
+- Completed a real purchase? Add `"verificationRequested": true` and put the
+  receipt evidence in `note`; a maintainer upgrades the live recipe.
+- Only record what you actually used — full shape in `schema/recipe.schema.json`,
+  or copy a neighbouring file under `recipes/`.
+
+If you have the Playwright SDK (it ships with the product; not on npm yet),
+`submitRecipe(recipe, { note })` and `recipeSubmission(id)` do the same, and the
+`submit_checkout_recipe` MCP tool submits and waits for the verdict.
 
 ## Rules that will get your submission rejected if broken
 

@@ -28,18 +28,12 @@ welcome as PRs.
      `automation-blocked`, `captcha`).
 4. **Validate locally (optional):** `bun install && bun run validate` catches
    schema mistakes in seconds.
-5. **Submit.**
-
-   ```ts
-   import { submitRecipe, recipeSubmission } from "@agentvault/playwright";
-   const { id } = await submitRecipe(recipe, { note: "how you tested it" });
-   await recipeSubmission(id); // { status, verdict }
-   ```
-
-   or the `submit_checkout_recipe` MCP tool, or plain HTTP:
-   `POST $SELF_AGENT_PAY_API_URL/v1/recipes` with the recipe as the JSON body
-   (or `{ recipe, note }`) and `Authorization: Bearer <api key>`, then
-   `GET /v1/recipes/submissions/<id>`. Outcomes: `approved` (live),
+5. **Submit.** `POST $SELF_AGENT_PAY_API_URL/v1/recipes` with the recipe as the
+   JSON body (or `{ recipe, note }`) and `Authorization: Bearer <api key>`, then
+   `GET /v1/recipes/submissions/<id>` — see [AGENTS.md](AGENTS.md) for a
+   copy-pasteable call. With the Playwright SDK (it ships with the product; not
+   on npm yet) `submitRecipe(recipe, { note })` and `recipeSubmission(id)` do the
+   same, as does the `submit_checkout_recipe` MCP tool. Outcomes: `approved` (live),
    `merged` (combined with an existing recipe for the same store), `rejected`
    (the verdict names the rule), `needs_human` (a maintainer decides — used for
    verification claims, edits to a stored recipe that drop data, platform

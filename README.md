@@ -100,16 +100,15 @@ what is rejected, and a rejection says which rule it broke.
 ## Benchmark
 
 An autonomy benchmark measures how far an agent gets across these recipes, and is
-what upgrades a status to `verified`. It currently lives upstream in the
-[`selfxyz/agent-vault`](https://github.com/selfxyz/agent-vault) monorepo because it
-depends on a Playwright SDK that is not published to npm yet. It will move into
-this repo once that SDK ships.
+what upgrades a status to `verified`. It is not open source yet — it depends on a
+Playwright SDK that is not published to npm. Both land here once that SDK ships.
 
 ## Provenance
 
-Extracted from the `registry/` workspace of `selfxyz/agent-vault`, with its git
-history preserved; now exported from the live registry by that repo's
-`Registry publish` workflow.
+Extracted from the `registry/` workspace of the closed-source monorepo that
+maintains this data, with its git history preserved. That registry is now the
+source of truth and this repo is its export — see
+[Contributing](#contributing).
 
 ## License
 
