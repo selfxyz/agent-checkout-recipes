@@ -4,34 +4,38 @@
   "kind": "platform",
   "name": "Shopify",
   "status": "partial",
-  "notes": "Card fill proven on 7/7 stores in the 2026-06 campaign; completed purchases were stopped by issuer 3DS step-up, not by the recipe. REGRESSION observed 2026-07-20 on CUSTOM-DOMAIN stores: store.dftba.com and topatoco.com both stalled at level `reach` with 'platform unknown', even though a plain curl of the same product pages returns the fingerprints in abundance (480 and 26 `cdn.shopify.com` references respectively, plus `shopify-checkout-api-token`). So the markers are served but not matched at detect time — re-check the detect step against a custom-domain store before trusting `*.myshopify.com`-only coverage. shop.pusheen.com did detect and reach `cart`, so this is not universal.",
+  "cardSurface": "shopify-card-fields",
+  "cvvTarget": "iframe[name*=card-fields-verification]:input[name=verification_value]",
   "detect": {
-    "hosts": ["*.myshopify.com"],
-    "urlPatterns": ["\\.myshopify\\.com/checkouts/"],
+    "hosts": [
+      "*.myshopify.com"
+    ],
     "selectors": [
       "script[src*=\"cdn.shopify.com\"]",
       "link[href*=\"cdn.shopify.com\"]",
       "meta[name=\"shopify-checkout-api-token\"]"
+    ],
+    "urlPatterns": [
+      "\\.myshopify\\.com/checkouts/"
     ]
-  },
-  "cardSurface": "shopify-card-fields",
-  "cvvTarget": "iframe[name*=card-fields-verification]:input[name=verification_value]",
-  "steps": {
-    "addToCart": "Resolve the variant from <product-path>.js and hit the /cart/<variantId>:1 permalink (bypasses TYDAL/Klaviyo popups that no-op the AJAX add), then /cart and 'Check out'. Fallback: button[name=add]. Never substitute a different variant than the URL's ?variant=.",
-    "contact": "#email; #TextField-firstName/-lastName, input[name=address1], input[name=city], input[name=postalCode], select[name=countryCode], select[name=zone].",
-    "payment": "Split iframes named card-fields-<field>-<rand>. Target by iframe[name*=card-fields-number]/-expiry/-verification/-name via frameLocator. Fill expiry and name first, the card-number token, then the CVV token immediately after into the verification frame.",
-    "placeOrder": "button#checkout-pay-button / 'Pay now', once.",
-    "outcome": "'Thank you' page / order-confirmation URL."
-  },
-  "selectors": {
-    "cardNumberFrame": "iframe[name*=\"card-fields-number\"]",
-    "expiryFrame": "iframe[name*=\"card-fields-expiry\"]",
-    "cvvFrame": "iframe[name*=\"card-fields-verification\"]",
-    "nameFrame": "iframe[name*=\"card-fields-name\"]",
-    "placeOrder": "button#checkout-pay-button"
   },
   "gotchas": [
     "Only the PLURAL /checkouts/ path is Shopify's; singular /checkout/ is WooCommerce and others.",
     "Shopify checkouts commonly trigger issuer 3DS on first automated card use — expect CHALLENGE:three_ds and hand off."
-  ]
+  ],
+  "notes": "Card fill proven on 7/7 stores in the 2026-06 campaign; completed purchases were stopped by issuer 3DS step-up, not by the recipe. REGRESSION observed 2026-07-20 on CUSTOM-DOMAIN stores: store.dftba.com and topatoco.com both stalled at level `reach` with 'platform unknown', even though a plain curl of the same product pages returns the fingerprints in abundance (480 and 26 `cdn.shopify.com` references respectively, plus `shopify-checkout-api-token`). So the markers are served but not matched at detect time — re-check the detect step against a custom-domain store before trusting `*.myshopify.com`-only coverage. shop.pusheen.com did detect and reach `cart`, so this is not universal.",
+  "selectors": {
+    "cardNumberFrame": "iframe[name*=\"card-fields-number\"]",
+    "cvvFrame": "iframe[name*=\"card-fields-verification\"]",
+    "expiryFrame": "iframe[name*=\"card-fields-expiry\"]",
+    "nameFrame": "iframe[name*=\"card-fields-name\"]",
+    "placeOrder": "button#checkout-pay-button"
+  },
+  "steps": {
+    "addToCart": "Resolve the variant from <product-path>.js and hit the /cart/<variantId>:1 permalink (bypasses TYDAL/Klaviyo popups that no-op the AJAX add), then /cart and 'Check out'. Fallback: button[name=add]. Never substitute a different variant than the URL's ?variant=.",
+    "contact": "#email; #TextField-firstName/-lastName, input[name=address1], input[name=city], input[name=postalCode], select[name=countryCode], select[name=zone].",
+    "outcome": "'Thank you' page / order-confirmation URL.",
+    "payment": "Split iframes named card-fields-<field>-<rand>. Target by iframe[name*=card-fields-number]/-expiry/-verification/-name via frameLocator. Fill expiry and name first, the card-number token, then the CVV token immediately after into the verification frame.",
+    "placeOrder": "button#checkout-pay-button / 'Pay now', once."
+  }
 }

@@ -2,12 +2,14 @@
   "$schema": "../../schema/recipe.schema.json",
   "id": "eproessentials.gumroad.com",
   "kind": "merchant",
-  "hosts": ["eproessentials.gumroad.com"],
+  "hosts": [
+    "eproessentials.gumroad.com"
+  ],
   "platform": "gumroad",
   "status": "partial",
-  "cardSurface": "stripe-payment-element",
   "lastVerifiedAt": "2026-07-20",
   "evidence": "Bench dry run (--test-card) reached `fill`: 'I want this!' → /checkout → Stripe Payment Element filled. No submit, so NOT purchase-verified.",
-  "notes": "Fixed-price $4.00 Canva template. Second independent Gumroad store to reach `fill` unmodified, which is what promotes the platform recipe's fill claim from one-store to reproducible.",
-  "exampleProductUrl": "https://eproessentials.gumroad.com/l/CustomPlayingCardsCanvaTemplate"
+  "cardSurface": "stripe-payment-element",
+  "exampleProductUrl": "https://eproessentials.gumroad.com/l/CustomPlayingCardsCanvaTemplate",
+  "notes": "Fixed-price $4.00 Canva template. Second independent Gumroad store to reach `fill` unmodified, which is what promotes the platform recipe's fill claim from one-store to reproducible."
 }

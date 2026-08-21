@@ -2,12 +2,14 @@
   "$schema": "../../schema/recipe.schema.json",
   "id": "ellenescapes.gumroad.com",
   "kind": "merchant",
-  "hosts": ["ellenescapes.gumroad.com"],
+  "hosts": [
+    "ellenescapes.gumroad.com"
+  ],
   "platform": "gumroad",
   "status": "partial",
-  "cardSurface": "stripe-payment-element",
   "lastVerifiedAt": "2026-07-20",
   "evidence": "Bench dry run (--test-card) reached `fill`: 'I want this!' → /checkout → Stripe Payment Element filled. No submit, so NOT purchase-verified.",
-  "notes": "Fixed-price $2.99 digital product. Third independent Gumroad store to reach `fill` with no selector overrides.",
-  "exampleProductUrl": "https://ellenescapes.gumroad.com/l/czmhuf"
+  "cardSurface": "stripe-payment-element",
+  "exampleProductUrl": "https://ellenescapes.gumroad.com/l/czmhuf",
+  "notes": "Fixed-price $2.99 digital product. Third independent Gumroad store to reach `fill` with no selector overrides."
 }

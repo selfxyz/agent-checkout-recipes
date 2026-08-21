@@ -4,23 +4,25 @@
   "kind": "platform",
   "name": "Big Cartel",
   "status": "partial",
-  "notes": "4-step wizard mapped on sanjosestickers.bigcartel.com; checkout load is flaky run-to-run and an invisible hCaptcha is present.",
-  "detect": {
-    "hosts": ["*.bigcartel.com"]
-  },
   "cardSurface": "stripe-payment-element",
   "cvvTarget": "payment-frame:input[name=cvc]",
-  "steps": {
-    "addToCart": "'Add to Cart' → 'Check Out'.",
-    "billing": "Wizard (Cart → Details → Shipping → Payment). Advance via 'Next' twice.",
-    "payment": "The Stripe frame PRELOADS early — advance through the wizard steps without filling the card, then fill at the final step. Card-number token, then the CVV token immediately after.",
-    "placeOrder": "'Pay' / 'Place order' / 'Complete', once.",
-    "outcome": "Confirmation / decline text."
+  "detect": {
+    "hosts": [
+      "*.bigcartel.com"
+    ]
   },
   "gotchas": [
     "Checkout load is flaky (sometimes no Details form renders) — RETRYABLE, re-navigate up to 3×.",
     "hCaptcha-invisible is present; if it fires, that is a DEAD-END — hand off.",
     "The 'Add to Cart' → 'Check Out' step is unreliable across stores: on 2026-07-20 four of five fresh Big Cartel stores (ydxart, kurt, chooshop, stickerpus) stalled at level `detect` with 'could not reach checkout' on in-stock, sub-$4 products. Treat Big Cartel add-to-cart as needing verification per store rather than assuming the platform flow holds.",
     "Gateway is per-store, not platform-wide: astray3.bigcartel.com is PayPal-only (live-classified paypal-only, no card fields ever mount) while sanjosestickers.bigcartel.com runs Stripe. Recon the gateway before assuming a card path exists."
-  ]
+  ],
+  "notes": "4-step wizard mapped on sanjosestickers.bigcartel.com; checkout load is flaky run-to-run and an invisible hCaptcha is present.",
+  "steps": {
+    "addToCart": "'Add to Cart' → 'Check Out'.",
+    "billing": "Wizard (Cart → Details → Shipping → Payment). Advance via 'Next' twice.",
+    "outcome": "Confirmation / decline text.",
+    "payment": "The Stripe frame PRELOADS early — advance through the wizard steps without filling the card, then fill at the final step. Card-number token, then the CVV token immediately after.",
+    "placeOrder": "'Pay' / 'Place order' / 'Complete', once."
+  }
 }

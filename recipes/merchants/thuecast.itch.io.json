@@ -2,7 +2,9 @@
   "$schema": "../../schema/recipe.schema.json",
   "id": "thuecast.itch.io",
   "kind": "merchant",
-  "hosts": ["thuecast.itch.io"],
+  "hosts": [
+    "thuecast.itch.io"
+  ],
   "platform": "custom",
   "status": "unverified",
   "notes": "itch.io needs its own driver: from the product page, open the buy/download flow (set a $1+ price, 'Buy Now') FIRST — only then does it redirect to hosted Stripe (checkout.stripe.com) for card entry. Marked platform 'custom' (not 'stripe-checkout') so consumers don't try to fill Stripe fields on the itch.io product page. Queue candidate from the 2026-06 campaign."

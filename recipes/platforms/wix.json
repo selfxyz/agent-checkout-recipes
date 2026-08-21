@@ -4,7 +4,8 @@
   "kind": "platform",
   "name": "Wix Stores",
   "status": "unverified",
-  "notes": "Derived from Wix's checkout structure — validate on first use.",
+  "cardSurface": "stripe-payment-element",
+  "cvvTarget": "payment-frame:input[name=cvc]",
   "detect": {
     "selectors": [
       "script[src*=\"static.parastorage.com\"]",
@@ -12,16 +13,15 @@
       "#SITE_CONTAINER[ng-app]"
     ]
   },
-  "cardSurface": "stripe-payment-element",
-  "cvvTarget": "payment-frame:input[name=cvc]",
+  "notes": "Derived from Wix's checkout structure — validate on first use.",
+  "selectors": {
+    "addToCart": "[data-hook=\"add-to-cart-button\"]"
+  },
   "steps": {
     "addToCart": "[data-hook=add-to-cart-button] → cart → 'Checkout'.",
     "billing": "Wizard — email, then delivery address, then payment.",
+    "outcome": "'Thank you' / order number.",
     "payment": "Stripe/Wix Payments Payment Element. Card-number token, then the CVV token immediately after.",
-    "placeOrder": "'Place Order' / 'Pay now', once.",
-    "outcome": "'Thank you' / order number."
-  },
-  "selectors": {
-    "addToCart": "[data-hook=\"add-to-cart-button\"]"
+    "placeOrder": "'Place Order' / 'Pay now', once."
   }
 }
