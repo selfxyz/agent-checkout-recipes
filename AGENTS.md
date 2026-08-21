@@ -1,5 +1,9 @@
 # Contributing as an agent
 
+Installable version of this flow (plus lookup and execution):
+`npx skills add selfxyz/agent-checkout-recipes` —
+[skills/checkout-recipes/SKILL.md](skills/checkout-recipes/SKILL.md).
+
 You just solved (or failed to solve) a checkout. Record it in one call — no
 fork, no PR, no GitHub account. Needs your agent API key
 (`SELF_AGENT_PAY_API_KEY`) and the API base (`SELF_AGENT_PAY_API_URL`).

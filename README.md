@@ -1,21 +1,48 @@
-# Checkout Recipes
+<p align="center">
+  <img src="assets/hero.svg" alt="Checkout Recipes — teach your agent to buy things" width="100%">
+</p>
 
-An open registry of machine-readable **checkout recipes**: how to complete a real
-purchase, unattended, on e-commerce platforms and on specific merchants.
+<p align="center">
+  <a href="https://github.com/selfxyz/agent-checkout-recipes/actions/workflows/ci.yml"><img src="https://github.com/selfxyz/agent-checkout-recipes/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-34d399.svg" alt="MIT"></a>
+</p>
 
 Agents are still bad at buying things in a browser — popups, AJAX carts that
-silently no-op, payment iframes, wallet-button traps, challenge walls. A recipe
-turns each solved site into a deterministic replay instead of a re-improvisation.
+silently no-op, payment iframes, wallet-button traps, challenge walls. A
+**checkout recipe** turns each solved site into a deterministic replay instead
+of a re-improvisation: how to complete a real purchase, unattended, on an
+e-commerce platform or a specific merchant.
 
-This registry is **data, not a product**. It is plain JSON validated by a JSON
-Schema, usable from any language or agent framework, and tied to no vendor, no
-hosted service, and no particular payment provider. The reference tooling here
-happens to be TypeScript/Bun, but nothing stops you reading `recipes/` directly.
+This repo is that registry **packaged as an agent skill**. Install it and your
+agent looks a site up before touching the cart, follows selectors proven on
+real purchases, and refuses cleanly on sites that can never work unattended.
+
+## Install
+
+```bash
+npx skills add selfxyz/agent-checkout-recipes
+```
+
+Works with Claude Code, Cursor, Codex, and 70+ other agents via
+[skills.sh](https://skills.sh). Then just ask your agent to buy something:
+
+> buy https://brushespack.com/shop/dry-brushes and stop before submitting payment
+
+The skill ([`skills/checkout-recipes/SKILL.md`](skills/checkout-recipes/SKILL.md))
+teaches it to query the live registry API for any URL, execute the matching
+recipe phase by phase, hand off to a human on any 3DS/CAPTCHA challenge, and
+contribute what it learned back.
+
+No install needed to use the data — it's plain JSON, tied to no vendor:
+
+```bash
+curl -s "https://clear-aardvark-944.convex.site/v1/recipes?url=https://shop.example.com/product/thing"
+```
 
 ## What's in a recipe
 
 - **Platform recipes** (`recipes/platforms/*.json`) — how a whole platform's
-  checkout works (Shopify, WooCommerce+Stripe, Stripe Payment Links, …):
+  checkout works (Shopify, WooCommerce+Stripe, Gumroad, Lemon Squeezy, …):
   detection fingerprints, the card-entry surface, per-phase steps, named
   selectors, gotchas.
 - **Merchant recipes** (`recipes/merchants/*.json`) — one store pinned down:
@@ -59,20 +86,6 @@ The status field is the point of the registry. It is not aspirational:
 Recording a dead end is as valuable as recording a success — it stops the next
 agent wasting a run on a site that cannot work.
 
-## Using it
-
-Read the JSON under `recipes/` directly, or build the aggregate:
-
-```bash
-bun install
-bun run build     # -> dist/registry.json (full bundle) + dist/RECIPES.md
-bun run validate  # schema + registry-wide invariants
-bun test
-```
-
-`dist/RECIPES.md` is one agent-readable document containing every recipe —
-handy to drop straight into a context window.
-
 ## Safety invariants (non-negotiable)
 
 - Recipes fill **mock/placeholder payment tokens only**. A recipe never
@@ -84,11 +97,11 @@ handy to drop straight into a context window.
 
 ## Contributing
 
-**Recipes are contributed through the API, not by pull request.** This repo is a
-read-only export of the live registry (refreshed daily); recipe PRs here will be
-closed with a pointer to [CONTRIBUTING.md](CONTRIBUTING.md), which has the
-one-call flow for agents (`submitRecipe(...)` / the `submit_checkout_recipe` MCP
-tool / `POST /v1/recipes`).
+**Recipes are contributed through the API, not by pull request** — the skill's
+step 4 is the whole flow. This repo is a read-only export of the live registry
+(refreshed daily); recipe PRs here will be closed with a pointer to
+[CONTRIBUTING.md](CONTRIBUTING.md). Skill, schema, tooling and docs PRs are
+welcome.
 
 Because these recipes are executed by autonomous agents, every submission is
 screened automatically before it goes live — for text aimed at the reading
@@ -96,6 +109,18 @@ agent, challenge-evasion content, embedded personal or payment data, spam — an
 combined with an existing recipe when it is the same store under another host.
 [CONTRIBUTING.md](CONTRIBUTING.md#what-a-recipe-may-not-contain) lists exactly
 what is rejected, and a rejection says which rule it broke.
+
+## Working on the registry itself
+
+```bash
+bun install
+bun run build     # -> dist/registry.json (full bundle) + dist/RECIPES.md
+bun run validate  # schema + registry-wide invariants
+bun test
+```
+
+`dist/RECIPES.md` is one agent-readable document containing every recipe —
+handy to drop straight into a context window.
 
 ## Benchmark
 

@@ -1,0 +1,66 @@
+<svg width="1200" height="420" viewBox="0 0 1200 420" fill="none" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Checkout Recipes — teach your agent to buy things">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="420" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0b1020"/>
+      <stop offset="0.55" stop-color="#0d1428"/>
+      <stop offset="1" stop-color="#101b36"/>
+    </linearGradient>
+    <linearGradient id="accent" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#34d399"/>
+      <stop offset="1" stop-color="#22d3ee"/>
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#22d3ee" stop-opacity="0.16"/>
+      <stop offset="1" stop-color="#22d3ee" stop-opacity="0"/>
+    </linearGradient>
+    <pattern id="grid" width="36" height="36" patternUnits="userSpaceOnUse">
+      <path d="M36 0H0V36" stroke="#ffffff" stroke-opacity="0.035" fill="none"/>
+    </pattern>
+  </defs>
+
+  <rect width="1200" height="420" rx="16" fill="url(#bg)"/>
+  <rect width="1200" height="420" rx="16" fill="url(#grid)"/>
+  <ellipse cx="920" cy="0" rx="520" ry="240" fill="url(#glow)"/>
+  <rect x="0.5" y="0.5" width="1199" height="419" rx="15.5" stroke="#ffffff" stroke-opacity="0.08"/>
+
+  <!-- Left: title block -->
+  <g font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+    <text x="72" y="118" font-size="15" font-weight="600" letter-spacing="4" fill="#34d399">OPEN AGENT SKILL + RECIPE REGISTRY</text>
+    <text x="70" y="178" font-size="52" font-weight="800" fill="#f8fafc">Checkout Recipes</text>
+    <text x="71" y="222" font-size="22" fill="#94a3b8">Teach your agent to buy things — replays of real,</text>
+    <text x="71" y="252" font-size="22" fill="#94a3b8">verified checkouts instead of improvisation.</text>
+  </g>
+
+  <!-- Install command pill -->
+  <g>
+    <rect x="71" y="288" width="486" height="52" rx="10" fill="#0a0f1d" stroke="#ffffff" stroke-opacity="0.14"/>
+    <text x="93" y="320" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="17">
+      <tspan fill="#64748b">$ </tspan><tspan fill="#e2e8f0">npx skills add </tspan><tspan fill="#34d399">selfxyz/agent-checkout-recipes</tspan>
+    </text>
+  </g>
+
+  <!-- Right: terminal card -->
+  <g>
+    <rect x="640" y="64" width="488" height="292" rx="12" fill="#0a0f1d" stroke="#ffffff" stroke-opacity="0.12"/>
+    <circle cx="666" cy="90" r="5.5" fill="#f87171"/>
+    <circle cx="686" cy="90" r="5.5" fill="#fbbf24"/>
+    <circle cx="706" cy="90" r="5.5" fill="#34d399"/>
+    <text x="1104" y="95" text-anchor="end" font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="12" fill="#475569">agent</text>
+    <line x1="640" y1="108" x2="1128" y2="108" stroke="#ffffff" stroke-opacity="0.08"/>
+    <g font-family="ui-monospace, SFMono-Regular, Menlo, Consolas, monospace" font-size="14.5">
+      <text x="664" y="140"><tspan fill="#64748b">&gt; </tspan><tspan fill="#e2e8f0">buy https://brushespack.com/shop/dry-brushes</tspan></text>
+      <text x="664" y="172"><tspan fill="#22d3ee">recipe</tspan><tspan fill="#64748b">  woocommerce + brushespack.com </tspan><tspan fill="#34d399">verified</tspan></text>
+      <text x="664" y="202"><tspan fill="#34d399">✓</tspan><tspan fill="#cbd5e1"> add to cart</tspan><tspan fill="#64748b">  — verified via cart line items</tspan></text>
+      <text x="664" y="232"><tspan fill="#34d399">✓</tspan><tspan fill="#cbd5e1"> billing</tspan><tspan fill="#64748b">      — country first, AJAX refresh</tspan></text>
+      <text x="664" y="262"><tspan fill="#34d399">✓</tspan><tspan fill="#cbd5e1"> payment</tspan><tspan fill="#64748b">      — Stripe Payment Element iframe</tspan></text>
+      <text x="664" y="292"><tspan fill="#34d399">✓</tspan><tspan fill="#cbd5e1"> place order</tspan><tspan fill="#64748b">  — submitted once</tspan></text>
+      <text x="664" y="330"><tspan fill="#34d399">order confirmed</tspan><tspan fill="#64748b"> · proven by the email receipt</tspan></text>
+    </g>
+  </g>
+
+  <!-- Bottom strip: supported platforms -->
+  <g font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="14" fill="#64748b">
+    <text x="72" y="384">Shopify · WooCommerce · Gumroad · Lemon Squeezy · Big Cartel · Paddle · Squarespace · Wix · Stripe Checkout — <tspan fill="#94a3b8">honest statuses, dead ends included</tspan></text>
+  </g>
+  <rect x="72" y="396" width="120" height="3" rx="1.5" fill="url(#accent)"/>
+</svg>
