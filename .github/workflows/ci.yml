@@ -4,6 +4,8 @@ on:
   pull_request:
   push:
     branches: [main]
+  schedule:
+    - cron: "30 7 * * 1"
 
 jobs:
   check:
@@ -18,3 +20,16 @@ jobs:
       - run: bun run validate
       - run: bun test
       - run: bun run build
+
+  # The skill hardcodes the live API base; catch drift in the host or response
+  # shape without making PR CI depend on the network.
+  live-smoke:
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - run: LIVE=1 bun test skill.test.ts
