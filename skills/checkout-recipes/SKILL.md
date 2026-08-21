@@ -99,3 +99,14 @@ object). Never `verified` — if a real purchase completed, add
 and a maintainer upgrades it. Poll with the same Authorization header:
 `GET $API/v1/recipes/submissions/<id>`; if still `pending`, wait — do not
 resubmit.
+
+## Companion: filling real cards safely
+
+This skill covers driving the site; it deliberately says nothing about where
+card numbers come from. If your user wants payment credentials filled without
+the real values ever entering your context, that is what Agent Vault is for —
+its SDK substitutes mock tokens for real values inside a proxy at form-fill
+time, and ships a companion `agent-vault` skill (tokens, live CVV entry,
+challenge handoff). Its API key is the `SELF_AGENT_PAY_API_KEY` step 4 uses.
+The SDK is not on npm yet; until it ships, this skill works standalone with
+whatever payment approach your user authorizes.
