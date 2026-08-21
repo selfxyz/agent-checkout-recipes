@@ -47,7 +47,9 @@ Full field reference:
   `overrides` beat platform `selectors` for the same key. Read `gotchas` before
   starting: they are ordering constraints ("set country first — it refreshes
   the state field") and traps ("the AJAX add silently no-ops — verify via the
-  cart"), not trivia.
+  cart"), not trivia. A merchant whose `platform` is `"custom"` comes with no
+  platform playbook (`platform` is null): improvise the flow yourself, but
+  still honor the merchant's `notes`, `gotchas`, and `overrides`.
 - **Trust levels** — `verified` means a real purchase was proven by an
   out-of-band receipt; `partial` means a real run reached a filled card form;
   `unverified` is derived structure. Prefer verified selectors when they
@@ -99,3 +101,14 @@ object). Never `verified` — if a real purchase completed, add
 and a maintainer upgrades it. Poll with the same Authorization header:
 `GET $API/v1/recipes/submissions/<id>`; if still `pending`, wait — do not
 resubmit.
+
+## Companion: filling real cards safely
+
+This skill covers driving the site; it deliberately says nothing about where
+card numbers come from. If your user wants payment credentials filled without
+the real values ever entering your context, that is what Agent Vault is for —
+its SDK substitutes mock tokens for real values inside a proxy at form-fill
+time, and ships a companion `agent-vault` skill (tokens, live CVV entry,
+challenge handoff). Its API key is the `SELF_AGENT_PAY_API_KEY` step 4 uses.
+The SDK is not on npm yet; until it ships, this skill works standalone with
+whatever payment approach your user authorizes.
