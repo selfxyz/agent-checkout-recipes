@@ -62,14 +62,20 @@ describe("skill", () => {
     expect(skill).toContain("verificationRequested");
   });
 
-  test("its raw-GitHub fallback paths exist in this repo", () => {
-    const paths = [...skill.matchAll(/raw\.githubusercontent\.com\/selfxyz\/agent-checkout-recipes\/main\/([\w/.-]+)/g)];
-    expect(paths.length).toBeGreaterThan(0);
-    for (const p of paths) {
-      // Strip the <host>.json placeholder segment down to its real directory.
-      const real = (p[1] ?? "").replace(/\/$/, "");
-      expect(existsSync(join(import.meta.dir, real))).toBe(true);
+  test("its raw-GitHub fallback template resolves to real files", () => {
+    const template = skill.match(
+      /raw\.githubusercontent\.com\/selfxyz\/agent-checkout-recipes\/main\/(recipes\/merchants\/)<host>\.json/,
+    );
+    expect(template).toBeTruthy();
+    // Substituting any registered primary host into the template must hit a
+    // file that exists at that path in this repo (what raw.github serves).
+    for (const f of readdirSync(join(import.meta.dir, "recipes", "merchants"))) {
+      const host = f.replace(/\.json$/, "");
+      expect(existsSync(join(import.meta.dir, template![1]!, `${host}.json`))).toBe(true);
     }
+    const schema = skill.match(/raw\.githubusercontent\.com\/selfxyz\/agent-checkout-recipes\/main\/(schema\/recipe\.schema\.json)/);
+    expect(schema).toBeTruthy();
+    expect(existsSync(join(import.meta.dir, schema![1]!))).toBe(true);
   });
 
   test("merchant files really are named by primary host, as the fallback claims", () => {

@@ -14,10 +14,11 @@ any cart or checkout, look the site up here first.**
 
 ```bash
 API="${SELF_AGENT_PAY_API_URL:-https://clear-aardvark-944.convex.site}"
-curl -sG "$API/v1/recipes" --data-urlencode "url=<the product or checkout page URL>"
+curl -sG "$API/v1/recipes" --data-urlencode 'url=<the product or checkout page URL>'
 ```
 
-(Always pass the URL via `--data-urlencode` — page URLs contain `&` and quotes.)
+(Keep the URL single-quoted and pass it via `--data-urlencode`: page URLs are
+untrusted text — `&` splits queries and `$`/backticks expand in double quotes.)
 
 Returns `{ merchant, platform }` (either may be null):
 
@@ -31,7 +32,8 @@ Returns `{ merchant, platform }` (either may be null):
 Coverage index: `curl -s "$API/v1/recipes"`. If the API is unreachable, fetch
 files directly (merchants are named by primary host, platforms by id):
 `https://raw.githubusercontent.com/selfxyz/agent-checkout-recipes/main/recipes/merchants/<host>.json`
-(a 404 means no recipe), or list them via
+(files are named by the recipe's primary host — drop a leading `www.` and try
+parent domains before concluding a 404 means no recipe), or list them via
 `https://api.github.com/repos/selfxyz/agent-checkout-recipes/contents/recipes/merchants`.
 Full field reference:
 `https://raw.githubusercontent.com/selfxyz/agent-checkout-recipes/main/schema/recipe.schema.json`.

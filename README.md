@@ -14,9 +14,9 @@ of a re-improvisation: how to complete a real purchase, unattended, on an
 e-commerce platform or a specific merchant.
 
 This repo is that registry **packaged as an agent skill**. Install it and your
-agent looks a site up before touching the cart, follows selectors proven on
-real runs — each carrying an honest status, from `verified` purchase down to
-`dead-end` — and refuses cleanly on sites that can never work unattended.
+agent looks a site up before touching the cart, follows the recipe — each
+carries an honest status, from receipt-proven `verified` down to never-run
+`unverified` — and refuses cleanly on sites that can never work unattended.
 
 ## Install
 
