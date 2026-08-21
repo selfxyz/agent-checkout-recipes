@@ -63,10 +63,23 @@ describe("skill", () => {
   });
 
   test("its raw-GitHub fallback paths exist in this repo", () => {
-    for (const p of skill.matchAll(/raw\.githubusercontent\.com\/selfxyz\/agent-checkout-recipes\/main\/([\w/.-]+)/g)) {
-      expect(existsSync(join(import.meta.dir, p[1] ?? ""))).toBe(true);
+    const paths = [...skill.matchAll(/raw\.githubusercontent\.com\/selfxyz\/agent-checkout-recipes\/main\/([\w/.-]+)/g)];
+    expect(paths.length).toBeGreaterThan(0);
+    for (const p of paths) {
+      // Strip the <host>.json placeholder segment down to its real directory.
+      const real = (p[1] ?? "").replace(/\/$/, "");
+      expect(existsSync(join(import.meta.dir, real))).toBe(true);
     }
-    expect(existsSync(join(import.meta.dir, "schema", "recipe.schema.json"))).toBe(true);
+  });
+
+  test("merchant files really are named by primary host, as the fallback claims", () => {
+    for (const f of readdirSync(join(import.meta.dir, "recipes", "merchants"))) {
+      const recipe = JSON.parse(
+        readFileSync(join(import.meta.dir, "recipes", "merchants", f), "utf8"),
+      ) as { id: string; hosts: string[] };
+      expect(f).toBe(`${recipe.id}.json`);
+      expect(recipe.hosts[0]).toBe(recipe.id);
+    }
   });
 });
 

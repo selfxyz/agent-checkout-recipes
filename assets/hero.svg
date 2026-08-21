@@ -27,8 +27,8 @@
   <g font-family="ui-sans-serif, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
     <text x="72" y="118" font-size="15" font-weight="600" letter-spacing="4" fill="#34d399">OPEN AGENT SKILL + RECIPE REGISTRY</text>
     <text x="70" y="178" font-size="52" font-weight="800" fill="#f8fafc">Checkout Recipes</text>
-    <text x="71" y="222" font-size="22" fill="#94a3b8">Teach your agent to buy things — replays of real,</text>
-    <text x="71" y="252" font-size="22" fill="#94a3b8">verified checkouts instead of improvisation.</text>
+    <text x="71" y="222" font-size="22" fill="#94a3b8">Teach your agent to buy things — replays of real</text>
+    <text x="71" y="252" font-size="22" fill="#94a3b8">checkout runs instead of improvisation.</text>
   </g>
 
   <!-- Install command pill -->

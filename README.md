@@ -15,7 +15,8 @@ e-commerce platform or a specific merchant.
 
 This repo is that registry **packaged as an agent skill**. Install it and your
 agent looks a site up before touching the cart, follows selectors proven on
-real purchases, and refuses cleanly on sites that can never work unattended.
+real runs — each carrying an honest status, from `verified` purchase down to
+`dead-end` — and refuses cleanly on sites that can never work unattended.
 
 ## Install
 
@@ -36,7 +37,8 @@ contribute what it learned back.
 No install needed to use the data — it's plain JSON, tied to no vendor:
 
 ```bash
-curl -s "https://clear-aardvark-944.convex.site/v1/recipes?url=https://shop.example.com/product/thing"
+curl -sG "https://clear-aardvark-944.convex.site/v1/recipes" \
+  --data-urlencode "url=https://shop.example.com/product/thing"
 ```
 
 ## What's in a recipe
