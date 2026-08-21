@@ -47,7 +47,9 @@ Full field reference:
   `overrides` beat platform `selectors` for the same key. Read `gotchas` before
   starting: they are ordering constraints ("set country first — it refreshes
   the state field") and traps ("the AJAX add silently no-ops — verify via the
-  cart"), not trivia.
+  cart"), not trivia. A merchant whose `platform` is `"custom"` comes with no
+  platform playbook (`platform` is null): improvise the flow yourself, but
+  still honor the merchant's `notes`, `gotchas`, and `overrides`.
 - **Trust levels** — `verified` means a real purchase was proven by an
   out-of-band receipt; `partial` means a real run reached a filled card form;
   `unverified` is derived structure. Prefer verified selectors when they
